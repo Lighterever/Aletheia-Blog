@@ -98,7 +98,7 @@
                 const copyBtn = document.createElement('button');
                 copyBtn.className = 'copy-btn';
                 copyBtn.innerHTML = '\u2398';
-                copyBtn.title = lang ? 'Copy code' : 'Copy code';
+                copyBtn.title = 'Copy code';
                 copyBtn.addEventListener('click', () => {
                     const codeText = code.textContent;
                     navigator.clipboard.writeText(codeText).then(() => {
