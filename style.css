@@ -175,6 +175,10 @@
     color: #999;
 }
 
+:root[data-theme="light"] .article-reader::before {
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
 /* ==================== 主题切换按钮 ==================== */
 .theme-toggle {
     background: none;
@@ -1497,10 +1501,57 @@ canvas, canvas::before, canvas::after {
 .article-reader {
     position: relative;
     z-index: 10;
-    max-width: 760px;
+    max-width: 820px;
     margin: 0 auto;
-    padding: 100px 24px 80px;
+    padding: 100px 48px 80px;
     animation: fade-in 0.5s ease;
+    isolation: isolate;
+}
+
+/* 液态玻璃背景层 —— 独立于文字，mask 不影响文本 */
+.article-reader::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+
+    /* 液态玻璃核心 */
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 30%, rgba(var(--accent-primary-rgb), 0.04), transparent 70%),
+        radial-gradient(ellipse 60% 50% at 50% 70%, rgba(var(--accent-secondary-rgb), 0.03), transparent 70%),
+        linear-gradient(135deg, rgba(var(--bg-primary-rgb), 0.55), rgba(var(--bg-primary-rgb), 0.45));
+    backdrop-filter: blur(60px) saturate(120%);
+    -webkit-backdrop-filter: blur(60px) saturate(120%);
+
+    /* 柔和边框 */
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.06);
+    border-radius: 20px;
+
+    /* 边缘渐变过渡 —— 上下两端缓慢融入页面背景（仅作用于背景层） */
+    mask-image:
+        linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(0, 0, 0, 0.12) 6%,
+            rgba(0, 0, 0, 0.35) 12%,
+            rgba(0, 0, 0, 1) 18%,
+            rgba(0, 0, 0, 1) 82%,
+            rgba(0, 0, 0, 0.35) 88%,
+            rgba(0, 0, 0, 0.12) 94%,
+            transparent 100%
+        );
+    -webkit-mask-image:
+        linear-gradient(
+            to bottom,
+            transparent 0%,
+            rgba(0, 0, 0, 0.12) 6%,
+            rgba(0, 0, 0, 0.35) 12%,
+            rgba(0, 0, 0, 1) 18%,
+            rgba(0, 0, 0, 1) 82%,
+            rgba(0, 0, 0, 0.35) 88%,
+            rgba(0, 0, 0, 0.12) 94%,
+            transparent 100%
+        );
 }
 
 .article-content {
@@ -1510,6 +1561,11 @@ canvas, canvas::before, canvas::after {
     color: var(--text-primary);
     letter-spacing: 0.01em;
     word-break: break-word;
+}
+
+/* 覆盖 github-markdown-css 的背景，交给液态玻璃容器统一处理 */
+.article-content.markdown-body {
+    background: transparent !important;
 }
 
 /* ---------- 标题 ---------- */
@@ -1571,6 +1627,7 @@ canvas, canvas::before, canvas::after {
     color: var(--text-secondary);
     margin: 28px 0 12px;
     scroll-margin-top: 24px;
+    position: relative;
 }
 
 .article-content h5 {
@@ -1676,6 +1733,70 @@ canvas, canvas::before, canvas::after {
     border: none;
 }
 
+/* ---------- 代码块包装器 ---------- */
+.article-content .code-block-wrapper {
+    position: relative;
+    margin: 28px 0;
+}
+
+.article-content .code-block-wrapper pre {
+    margin: 0;
+}
+
+/* ---------- 代码块语言标签 ---------- */
+.article-content .code-lang-label {
+    position: absolute;
+    top: 0;
+    right: 16px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    background: var(--bg-primary);
+    padding: 3px 10px;
+    border-radius: 0 0 6px 6px;
+    border: 1px solid var(--border-subtle);
+    border-top: none;
+    text-transform: lowercase;
+    z-index: 2;
+}
+
+/* ---------- 复制按钮 ---------- */
+.article-content .copy-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-family: var(--font-mono);
+    opacity: 0;
+    transition: all var(--transition-fast);
+    z-index: 5;
+}
+
+.article-content .code-block-wrapper:hover .copy-btn {
+    opacity: 1;
+}
+
+.article-content .copy-btn:hover {
+    background: var(--bg-hover);
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.article-content .copy-btn.copied {
+    color: var(--accent-success);
+    border-color: var(--accent-success);
+}
+
 /* ---------- 引用块 ---------- */
 .article-content blockquote {
     border-left: 3px solid var(--accent-secondary);
@@ -1736,6 +1857,32 @@ canvas, canvas::before, canvas::after {
     box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
 }
 
+/* ---------- 标题锚点 ---------- */
+.article-content .heading-anchor {
+    position: absolute;
+    left: -1.3em;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent-primary);
+    opacity: 0;
+    text-decoration: none;
+    border-bottom: none !important;
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    font-weight: 400;
+    transition: opacity var(--transition-fast);
+}
+
+.article-content h2:hover .heading-anchor,
+.article-content h3:hover .heading-anchor,
+.article-content h4:hover .heading-anchor {
+    opacity: 0.5;
+}
+
+.article-content .heading-anchor:hover {
+    opacity: 1 !important;
+}
+
 /* ---------- 表格 ---------- */
 .article-content table {
     width: 100%;
@@ -1762,6 +1909,18 @@ canvas, canvas::before, canvas::after {
 
 .article-content tr:nth-child(even) td {
     background: rgba(var(--accent-primary-rgb), 0.02);
+}
+
+/* ---------- 表格滚动包装器 ---------- */
+.article-content .table-wrapper {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 28px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.article-content .table-wrapper table {
+    margin: 0;
 }
 
 /* ---------- 键盘 ---------- */
@@ -1893,7 +2052,14 @@ canvas, canvas::before, canvas::after {
     }
     
     .article-reader {
-        padding: 80px 16px 60px;
+        padding: 70px 16px 50px;
+        max-width: 100%;
+    }
+
+    .article-reader::before {
+        border-radius: 12px;
+        backdrop-filter: blur(40px) saturate(110%);
+        -webkit-backdrop-filter: blur(40px) saturate(110%);
     }
 
     .article-content h1 {
@@ -1916,6 +2082,30 @@ canvas, canvas::before, canvas::after {
     .article-content pre {
         padding: 18px;
         border-radius: 8px;
+    }
+
+    .article-content .code-block-wrapper {
+        margin: 22px 0;
+    }
+
+    .article-content .code-lang-label {
+        font-size: 10px;
+        padding: 2px 8px;
+        right: 10px;
+    }
+
+    .article-content .copy-btn {
+        width: 28px;
+        height: 28px;
+        top: 8px;
+        right: 8px;
+        font-size: 12px;
+        opacity: 0.6;
+    }
+
+    .article-content .heading-anchor {
+        font-size: 0.8em;
+        left: -1.1em;
     }
     
     .back-fab,

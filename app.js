@@ -45,6 +45,117 @@
 
         apply() {
             document.documentElement.setAttribute('data-theme', this.current);
+            MarkdownRenderer.switchTheme(this.current === 'dark');
+        }
+    }
+
+    class MarkdownRenderer {
+        static init() {
+            marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+        }
+
+        static render(content, targetElement, title) {
+            if (!targetElement) return;
+
+            let html = marked.parse(content);
+
+            if (title && !/<h1[ >]/.test(html)) {
+                html = `<h1>${escapeHtml(title)}</h1>` + html;
+            }
+
+            targetElement.innerHTML = html;
+            targetElement.classList.add('markdown-body');
+
+            if (typeof hljs !== 'undefined') {
+                try { hljs.highlightAll(); } catch (e) {}
+            }
+
+            MarkdownRenderer.enhanceCodeBlocks(targetElement);
+            MarkdownRenderer.addHeadingAnchors(targetElement);
+            MarkdownRenderer.wrapTables(targetElement);
+        }
+
+        static enhanceCodeBlocks(container) {
+            const pres = container.querySelectorAll('pre');
+            pres.forEach(pre => {
+                const code = pre.querySelector('code');
+                if (!code) return;
+
+                const lang = MarkdownRenderer.extractLang(code.className);
+
+                if (lang) {
+                    const label = document.createElement('span');
+                    label.className = 'code-lang-label';
+                    label.textContent = lang;
+                    pre.appendChild(label);
+                }
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'copy-btn';
+                copyBtn.innerHTML = '\u2398';
+                copyBtn.title = lang ? 'Copy code' : 'Copy code';
+                copyBtn.addEventListener('click', () => {
+                    const codeText = code.textContent;
+                    navigator.clipboard.writeText(codeText).then(() => {
+                        copyBtn.classList.add('copied');
+                        copyBtn.innerHTML = '\u2713';
+                        setTimeout(() => {
+                            copyBtn.classList.remove('copied');
+                            copyBtn.innerHTML = '\u2398';
+                        }, 2000);
+                    }).catch(() => {
+                        copyBtn.textContent = 'Err';
+                    });
+                });
+                wrapper.appendChild(copyBtn);
+            });
+        }
+
+        static extractLang(className) {
+            const match = className.match(/language-(\S+)/);
+            return match ? match[1] : '';
+        }
+
+        static addHeadingAnchors(container) {
+            const headings = container.querySelectorAll('h2, h3, h4');
+            headings.forEach((h, i) => {
+                if (!h.id) {
+                    h.id = 'heading-' + i;
+                }
+                const anchor = document.createElement('a');
+                anchor.className = 'heading-anchor';
+                anchor.href = '#' + h.id;
+                anchor.innerHTML = '\u00A7';
+                anchor.setAttribute('aria-label', 'Permalink to ' + h.textContent.trim());
+                h.insertBefore(anchor, h.firstChild);
+            });
+        }
+
+        static wrapTables(container) {
+            const tables = container.querySelectorAll('table');
+            tables.forEach(table => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
+
+        static switchTheme(isDark) {
+            const hlDark = document.getElementById('hljs-dark-theme');
+            const hlLight = document.getElementById('hljs-light-theme');
+            const ghDark = document.getElementById('gh-md-dark-theme');
+            const ghLight = document.getElementById('gh-md-light-theme');
+
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
         }
     }
 
@@ -170,7 +281,6 @@
 
         render(article) {
             if (!this.content) return;
-            const htmlContent = marked.parse(article.content);
 
             const dateStr = formatDate(article.date).replace(/-/g, '.');
             const tagsStr = (article.tags || []).map(t => '#' + t).join(' ');
@@ -180,13 +290,7 @@
                 metaEl.textContent = dateStr + ' · ' + tagsStr;
             }
 
-            this.content.innerHTML = htmlContent;
-
-            if (!this.content.querySelector('h1')) {
-                const h1 = document.createElement('h1');
-                h1.textContent = article.title;
-                this.content.insertBefore(h1, this.content.firstChild);
-            }
+            MarkdownRenderer.render(article.content, this.content, article.title);
 
             this.setupArticle();
 
@@ -226,7 +330,9 @@
             headings.forEach(heading => {
                 let idx = 0;
                 for (let i = 0; i < allHeadings.length; i++) { if (allHeadings[i] === heading) { idx = i; break; } }
-                html += `<div class="toc-item toc-${heading.tagName.toLowerCase()}" data-target="heading-${idx}" role="button" tabindex="0">${escapeHtml(heading.textContent)}</div>`;
+                const clone = heading.cloneNode(true);
+                clone.querySelector('.heading-anchor')?.remove();
+                html += `<div class="toc-item toc-${heading.tagName.toLowerCase()}" data-target="heading-${idx}" role="button" tabindex="0">${escapeHtml(clone.textContent)}</div>`;
             });
             if (this.tocList) this.tocList.innerHTML = html;
             
@@ -541,7 +647,7 @@
             this.generateBinaryBackground();
             this.initCaesarWheels();
             this.bindEvents();
-            marked.setOptions({ breaks: true, gfm: true, headerIds: false, mangle: false });
+            MarkdownRenderer.init();
 
             const hash = (window.location.hash || '#home').replace('#', '');
             this.navigate(hash);

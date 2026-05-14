@@ -57,11 +57,11 @@ function parseMdFile(filePath) {
 }
 
 function escapeStringLiteral(str) {
-    return str.replace(/'/g, "\\'");
+    return str.replace(/[\\']/g, '\\$&');
 }
 
 function escapeTemplateLiteral(str) {
-    return str.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
+    return str.replace(/[\\`]/g, '\\$&').replace(/\$\{/g, '\\${');
 }
 
 function generateDataJs(articles) {
