@@ -110,6 +110,14 @@
 :root[data-theme="light"] .article-content code {
     background: #e8e8f0;
     color: #1a1a2e;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+:root[data-theme="light"] .article-content strong,
+:root[data-theme="light"] .article-content b {
+    color: #b86a00;
+}
+:root[data-theme="light"] .article-content img {
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 /* 浅色主题下的终端 */
@@ -1489,136 +1497,308 @@ canvas, canvas::before, canvas::after {
 .article-reader {
     position: relative;
     z-index: 10;
-    max-width: 800px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 100px 24px 60px;
+    padding: 100px 24px 80px;
     animation: fade-in 0.5s ease;
 }
 
 .article-content {
     font-family: var(--font-serif);
     font-size: 17px;
-    line-height: 1.9;
+    line-height: 1.95;
     color: var(--text-primary);
+    letter-spacing: 0.01em;
+    word-break: break-word;
 }
 
+/* ---------- 标题 ---------- */
 .article-content h1 {
-    font-size: 32px;
-    font-weight: 600;
+    font-size: 34px;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 24px;
+    margin: 0 0 8px;
     line-height: 1.3;
+    letter-spacing: 0.02em;
     scroll-margin-top: 24px;
 }
 
 .article-content h2 {
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
-    margin: 48px 0 20px;
-    padding-bottom: 8px;
+    margin: 56px 0 20px;
+    padding-bottom: 10px;
     border-bottom: 1px solid var(--border-subtle);
     scroll-margin-top: 24px;
+    position: relative;
+}
+
+.article-content h2::before {
+    content: '#';
+    color: var(--accent-primary);
+    opacity: 0.35;
+    margin-right: 12px;
+    font-family: var(--font-mono);
+    font-weight: 400;
 }
 
 .article-content h3 {
     font-size: 20px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
-    margin: 32px 0 16px;
+    margin: 36px 0 16px;
     scroll-margin-top: 24px;
+    position: relative;
+    padding-left: 16px;
+}
+
+.article-content h3::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    bottom: 4px;
+    width: 3px;
+    background: var(--accent-primary);
+    border-radius: 2px;
+    opacity: 0.5;
 }
 
 .article-content h4 {
     font-size: 17px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-secondary);
-    margin: 24px 0 12px;
+    margin: 28px 0 12px;
     scroll-margin-top: 24px;
 }
 
+.article-content h5 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 24px 0 10px;
+    scroll-margin-top: 24px;
+}
+
+.article-content h6 {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin: 20px 0 8px;
+    scroll-margin-top: 24px;
+}
+
+/* ---------- 段落 ---------- */
 .article-content p {
     margin-bottom: 20px;
 }
 
+/* ---------- 强调 ---------- */
+.article-content strong,
+.article-content b {
+    font-weight: 700;
+    color: #ffd699;
+}
+
+.article-content em,
+.article-content i {
+    font-style: italic;
+}
+
+/* ---------- 删除线 ---------- */
+.article-content del {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+/* ---------- 高亮 ---------- */
+.article-content mark {
+    background: rgba(var(--accent-warning-rgb), 0.25);
+    color: var(--text-primary);
+    padding: 1px 4px;
+    border-radius: 2px;
+}
+
+/* ---------- 链接 ---------- */
 .article-content a {
     color: var(--accent-primary);
     text-decoration: none;
-    border-bottom: 1px solid transparent;
-    transition: border-color var(--transition-fast);
+    border-bottom: 1px solid rgba(var(--accent-primary-rgb), 0.3);
+    transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .article-content a:hover {
     border-bottom-color: var(--accent-primary);
+    color: #33ff99;
 }
 
+/* ---------- 行内代码 ---------- */
 .article-content code {
     font-family: var(--font-mono);
-    font-size: 14px;
-    padding: 2px 8px;
+    font-size: 13.5px;
+    padding: 2px 7px;
     background: var(--bg-tertiary);
+    border: 1px solid rgba(var(--accent-tertiary-rgb), 0.12);
     border-radius: 4px;
     color: var(--accent-tertiary);
 }
 
+/* ---------- 代码块 ---------- */
 .article-content pre {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
-    border-radius: 8px;
-    padding: 20px;
-    margin: 24px 0;
+    border-radius: 10px;
+    padding: 24px;
+    margin: 28px 0;
     overflow-x: auto;
+    position: relative;
+}
+
+.article-content pre::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--accent-primary-rgb), 0.15), transparent);
 }
 
 .article-content pre code {
     background: none;
     padding: 0;
-    font-size: 14px;
-    line-height: 1.6;
+    font-size: 13.5px;
+    line-height: 1.7;
     color: var(--text-primary);
+    border: none;
 }
 
+/* ---------- 引用块 ---------- */
 .article-content blockquote {
     border-left: 3px solid var(--accent-secondary);
-    padding-left: 20px;
-    margin: 24px 0;
+    padding: 16px 20px;
+    margin: 28px 0;
     color: var(--text-secondary);
     font-style: italic;
+    background: rgba(var(--accent-secondary-rgb), 0.04);
+    border-radius: 0 6px 6px 0;
 }
 
+.article-content blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- 列表 ---------- */
 .article-content ul,
 .article-content ol {
     margin: 20px 0;
-    padding-left: 24px;
+    padding-left: 28px;
+}
+
+.article-content ul ::marker {
+    color: var(--accent-primary);
+    opacity: 0.5;
+}
+
+.article-content ol ::marker {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85em;
 }
 
 .article-content li {
     margin-bottom: 8px;
+    line-height: 1.8;
 }
 
+.article-content li > ul,
+.article-content li > ol {
+    margin: 8px 0;
+}
+
+/* ---------- 分割线 ---------- */
+.article-content hr {
+    border: none;
+    height: 1px;
+    margin: 40px 0;
+    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+}
+
+/* ---------- 图片 ---------- */
+.article-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 24px 0;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------- 表格 ---------- */
 .article-content table {
     width: 100%;
     border-collapse: collapse;
-    margin: 24px 0;
+    margin: 28px 0;
+    font-size: 15px;
 }
 
 .article-content th,
 .article-content td {
-    padding: 12px;
+    padding: 12px 16px;
     border: 1px solid var(--border-subtle);
     text-align: left;
 }
 
 .article-content th {
     background: var(--bg-tertiary);
-    font-weight: 500;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
+.article-content tr:nth-child(even) td {
+    background: rgba(var(--accent-primary-rgb), 0.02);
+}
+
+/* ---------- 键盘 ---------- */
+.article-content kbd {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 2px 7px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-accent);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    box-shadow: 0 1px 0 rgba(var(--accent-primary-rgb), 0.1);
+}
+
+/* ---------- 脚注 ---------- */
+.article-content sup a {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+    border-bottom: none;
+}
+
+/* ---------- 任务列表 ---------- */
+.article-content input[type="checkbox"] {
+    accent-color: var(--accent-primary);
+    margin-right: 6px;
+}
+
+/* ==================== 文章元信息 ==================== */
 .article-meta {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 0.85rem;
-    color: #666;
-    margin: 8px 0 24px;
+    color: var(--text-muted);
+    margin: 8px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .article-category {
@@ -1713,19 +1893,29 @@ canvas, canvas::before, canvas::after {
     }
     
     .article-reader {
-        padding: 80px 16px 40px;
+        padding: 80px 16px 60px;
     }
-    
+
     .article-content h1 {
         font-size: 26px;
     }
-    
+
     .article-content h2 {
         font-size: 20px;
+        margin: 40px 0 16px;
     }
-    
+
+    .article-content h3 {
+        font-size: 18px;
+    }
+
     .article-content {
         font-size: 16px;
+    }
+
+    .article-content pre {
+        padding: 18px;
+        border-radius: 8px;
     }
     
     .back-fab,

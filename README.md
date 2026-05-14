@@ -13,7 +13,9 @@
 ├── index.html      ← 全部视图层 + 全局导航栏
 ├── style.css       ← 暗色极简主题 + CSS变量体系
 ├── app.js          ← OOP核心：7个类 + hash路由
-├── data.js         ← 文章数据
+├── data.js         ← 文章数据（由构建脚本自动生成）
+├── articles/       ← 文章源文件（.md + frontmatter）
+├── scripts/        ← 构建工具
 ├── encrypt.js      ← Node.js加密工具
 └── README.md
 ```
@@ -90,19 +92,28 @@ App（主控制器）
 
 ## 添加文章
 
-在 `data.js` 的 `articles` 数组中添加对象：
+在 `articles/` 目录下创建 `.md` 文件，使用 frontmatter 声明元数据：
 
-```javascript
-{
-    id: 'article-slug',
-    title: '文章标题',
-    date: '2026-05-15',
-    tags: ['数学', '算法'],
-    content: '# 标题\n\n正文 Markdown...'
-}
+```markdown
+---
+title: 文章标题
+date: 2026-05-15
+tags: [数学, 算法]
+id: article-slug
+---
+
+# 标题
+
+正文 Markdown...
 ```
 
-标签从文章数据自动提取，新增后自动出现在检索页筛选器中。
+然后运行构建脚本生成 `data.js`：
+
+```bash
+node scripts/build-articles.js
+```
+
+标签从文章数据自动提取，新增后自动出现在检索页筛选器中。`id` 字段可选，不填则使用文件名（不含扩展名）。
 
 数学公式用 KaTeX 语法：行内 `$E=mc^2$`，行间 `$$\int$$`。
 

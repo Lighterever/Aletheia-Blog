@@ -1,16 +1,11 @@
-/**
- * 加密博客数据文件（由 scripts/build-articles.js 自动生成）
- * 请勿手动编辑此文件，在 articles/ 目录下添加 .md 文件后运行 node scripts/build-articles.js
- */
+---
+title: README
+date: 2026-05-14
+tags: []
+id: readme
+---
 
-const VAULT_KEY = 'aletheia';
-const articles = [
-    {
-        id: 'readme',
-        title: 'README',
-        date: '2026-05-14',
-        tags: [],
-        content: `# 一些从深处取出的东西
+# 一些从深处取出的东西
 
 这个网站起源于一个密钥室——把文字加密，输入密钥才能看到。那时候我觉得有些东西只该给愿意看的人看。
 
@@ -30,6 +25,4 @@ const articles = [
 
 密钥就在最显眼的地方。（tips: a-------）
 
-联系方式：Lighter6124@student.gdufe.edu.cn`
-    }
-];
+联系方式：Lighter6124@student.gdufe.edu.cn
