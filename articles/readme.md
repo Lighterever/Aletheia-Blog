@@ -25,4 +25,4 @@ id: readme
 
 密钥就在最显眼的地方。（tips: a-------）
 
-联系方式：Lighter6124@student.gdufe.edu.cn
+联系方式：me@lighterever.com
