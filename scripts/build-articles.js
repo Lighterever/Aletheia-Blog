@@ -16,9 +16,10 @@ function parseFrontmatter(text) {
         const key = trimmed.slice(0, colonIndex).trim();
         const value = trimmed.slice(colonIndex + 1).trim();
         if (value.startsWith('[') && value.endsWith(']')) {
-            try {
-                result[key] = JSON.parse(value);
-            } catch {
+            const inner = value.slice(1, -1).trim();
+            if (inner) {
+                result[key] = inner.split(',').map(s => s.trim().replace(/^['"]|['"]$/g, ''));
+            } else {
                 result[key] = [];
             }
         } else {

@@ -283,11 +283,13 @@
             if (!this.content) return;
 
             const dateStr = formatDate(article.date).replace(/-/g, '.');
-            const tagsStr = (article.tags || []).map(t => '#' + t).join(' ');
+            const tagsHtml = (article.tags || []).map(t =>
+                `<span class="article-category">#${t}</span>`
+            ).join('');
 
             const metaEl = document.getElementById('articleMeta');
             if (metaEl) {
-                metaEl.textContent = dateStr + ' · ' + tagsStr;
+                metaEl.innerHTML = `<span class="article-meta-date">${dateStr}</span>${tagsHtml}`;
             }
 
             MarkdownRenderer.render(article.content, this.content, article.title);
@@ -630,7 +632,10 @@
             };
 
             this.currentPage = null;
-            this.currentTag = 'all';
+            this.currentTags = new Set();
+            this.currentFilterMode = 'or';
+            this.currentSortField = 'date';
+            this.currentSortDir = 'desc';
             this.readerReturnPage = 'home';
 
             this.theme = new Theme(this);
@@ -649,14 +654,21 @@
             this.bindEvents();
             MarkdownRenderer.init();
 
-            const hash = (window.location.hash || '#home').replace('#', '');
-            this.navigate(hash);
+            const path = this.getPathFromUrl();
+            this.navigateToPath(path);
+            this.initialized = true;
 
-            window.addEventListener('hashchange', () => {
+            window.addEventListener('popstate', () => {
                 if (this.currentPage === 'article_reader') return;
-                this.navigate((window.location.hash || '#home').replace('#', ''));
+                this.handleRouteChange();
             });
-            window.addEventListener('scroll', () => this.updateReadingProgress(), { passive: true });
+            window.addEventListener('scroll', () => {
+                this.updateReadingProgress();
+                const nav = document.getElementById('globalNav');
+                if (nav) {
+                    nav.classList.toggle('scrolled', window.scrollY > 10);
+                }
+            }, { passive: true });
             window.addEventListener('resize', () => this.generateBinaryBackground());
         }
 
@@ -666,6 +678,84 @@
             this.initCaesarWheels();
         }
 
+        getPathFromUrl() {
+            if (window.location.protocol === 'file:') return 'home';
+            const path = window.location.pathname;
+            if (!path || path === '/') return 'home';
+            return path.replace(/^\//, '') || 'home';
+        }
+
+        updateBrowserUrl(page) {
+            const urlMap = {
+                'home': '/',
+                'vault': '/vault',
+                'articles': '/articles',
+                'encrypted_list': '/articles',
+                'article_reader': window.location.pathname
+            };
+            const url = urlMap[page] || '/';
+            if (window.location.pathname !== url) {
+                history.replaceState(null, '', url);
+            }
+        }
+
+        navigateToPath(path) {
+            if (path === 'readme') {
+                this.navigate('readme');
+                return;
+            }
+            if (path.startsWith('article/')) {
+                if (!sessionStorage.getItem('vaultUnlocked')) {
+                    history.pushState(null, '', '/vault');
+                    this.navigate('vault');
+                    return;
+                }
+                const id = path.replace('article/', '');
+                const article = typeof articles !== 'undefined' ? articles.find(a => a.id === id) : null;
+                if (article) {
+                    this.openBlogArticle(article);
+                    return;
+                }
+            }
+            const protectedPages = ['articles', 'encrypted_list'];
+            if (protectedPages.includes(path) && !sessionStorage.getItem('vaultUnlocked')) {
+                history.pushState(null, '', '/vault');
+                this.navigate('vault');
+                return;
+            }
+            this.navigate(path);
+        }
+
+        handleRouteChange() {
+            const path = this.getPathFromUrl();
+            if (path === 'home') {
+                this.navigate('home');
+            } else if (path === 'vault') {
+                this.navigate('vault');
+            } else if (path === 'articles' || path === '') {
+                if (sessionStorage.getItem('vaultUnlocked')) {
+                    this.navigate('articles');
+                } else {
+                    this.navigate('vault');
+                }
+            } else if (path.startsWith('article/')) {
+                const id = path.replace('article/', '');
+                const article = typeof articles !== 'undefined' ? articles.find(a => a.id === id) : null;
+                if (article) {
+                    if (sessionStorage.getItem('vaultUnlocked')) {
+                        this.readerReturnPage = 'articles';
+                        this.openBlogArticle(article);
+                    } else {
+                        this.navigate('vault');
+                    }
+                }
+            } else if (path === 'readme') {
+                this.openReadme();
+            } else {
+                this.navigate('home');
+            }
+        }
+
         navigate(page) {
             if (page === 'readme') {
                 this.openReadme();
@@ -673,20 +763,21 @@
             }
             if (page.startsWith('article/')) {
                 if (!sessionStorage.getItem('vaultUnlocked')) {
-                    window.location.hash = '#vault';
+                    history.pushState(null, '', '/vault');
                     this.navigate('vault');
                     return;
                 }
-                const id = parseInt(page.replace('article/', ''), 10);
-                if (!isNaN(id)) {
-                    this.openBlogArticle(id);
+                const id = page.replace('article/', '');
+                const article = typeof articles !== 'undefined' ? articles.find(a => a.id === id) : null;
+                if (article) {
+                    this.openBlogArticle(article);
                     return;
                 }
             }
 
             const protectedPages = ['articles', 'encrypted_list'];
             if (protectedPages.includes(page) && !sessionStorage.getItem('vaultUnlocked')) {
-                window.location.hash = '#vault';
+                history.pushState(null, '', '/vault');
                 this.navigate('vault');
                 return;
             }
@@ -694,19 +785,19 @@
             this.hideAllPages();
             this.currentPage = page;
 
+            this.updateBrowserUrl(page);
+
             switch (page) {
                 case 'home':
                     this.pages.home?.classList.remove('hidden');
                     this.navbar.show();
                     this.navbar.updateActive('home');
-                    window.location.hash = '#home';
                     break;
                 case 'articles':
                     this.pages.articles?.classList.remove('hidden');
                     this.navbar.show();
                     this.navbar.updateActive('vault');
                     this.renderArticleRetrieval();
-                    window.location.hash = '#articles';
                     break;
                 case 'vault':
                     this.pages.vault?.classList.remove('hidden');
@@ -718,7 +809,6 @@
                         this.vault.hintDisplay.textContent = 'truth is an event';
                     }
                     setTimeout(() => this.vault.keyInput?.focus(), 100);
-                    window.location.hash = '#vault';
                     break;
                 case 'encrypted_list':
                     this.pages.encrypted_list?.classList.remove('hidden');
@@ -742,9 +832,11 @@
         }
 
         renderArticleRetrieval() {
-            const list = document.getElementById('articlesList');
             const tagFilter = document.getElementById('tagFilter');
-            if (!list || !tagFilter) return;
+            if (!tagFilter) return;
+
+            this.currentTags.clear();
+            this.currentFilterMode = 'or';
 
             const allTags = getAllTags();
             tagFilter.innerHTML = '<button class="tag-btn active" data-tag="all">全部</button>' +
@@ -753,14 +845,48 @@
             this.renderFilteredArticles();
         }
 
-        renderFilteredArticles(searchQuery = '', activeTag = 'all') {
+        sortArticles(arr, field, dir) {
+            return [...arr].sort((a, b) => {
+                let cmp = 0;
+                if (field === 'date') {
+                    cmp = new Date(a.date) - new Date(b.date);
+                } else if (field === 'title') {
+                    cmp = (a.title || '').localeCompare(b.title || '', 'zh-CN');
+                } else if (field === 'tags') {
+                    const aTags = (a.tags || []).join(',').toLowerCase();
+                    const bTags = (b.tags || []).join(',').toLowerCase();
+                    cmp = aTags.localeCompare(bTags);
+                }
+                return dir === 'asc' ? cmp : -cmp;
+            });
+        }
+
+        applySortIndicator() {
+            const header = document.querySelector('.table-header');
+            if (!header) return;
+            header.querySelectorAll('.sort-col').forEach(col => {
+                col.classList.toggle('active', col.dataset.sort === this.currentSortField);
+                const arrow = col.querySelector('.sort-arrow');
+                if (arrow) {
+                    arrow.textContent = col.dataset.sort === this.currentSortField
+                        ? (this.currentSortDir === 'asc' ? '↑' : '↓') : '';
+                }
+            });
+        }
+
+        renderFilteredArticles(searchQuery = '', activeTags = null) {
             const list = document.getElementById('articlesList');
             if (!list) return;
 
             let filtered = typeof articles !== 'undefined' ? [...articles] : [];
 
-            if (activeTag !== 'all') {
-                filtered = filtered.filter(a => (a.tags || []).includes(activeTag));
+            const tags = activeTags !== null ? activeTags : this.currentTags;
+            if (tags.size > 0) {
+                filtered = filtered.filter(a =>
+                    this.currentFilterMode === 'or'
+                        ? (a.tags || []).some(t => tags.has(t))
+                        : tags.size <= (a.tags || []).length && [...tags].every(t => (a.tags || []).includes(t))
+                );
             }
 
             if (searchQuery) {
@@ -773,7 +899,31 @@
                 });
             }
 
-            filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            filtered = this.sortArticles(filtered, this.currentSortField, this.currentSortDir);
+            this.applySortIndicator();
+
+            const fs = document.getElementById('filterStatus');
+            if (fs) {
+                if (tags.size > 0) {
+                    fs.innerHTML = `已选 ${tags.size} 个 · <span class="filter-mode-toggle"><span class="mode-option${this.currentFilterMode === 'or' ? ' active' : ''}" data-mode="or">OR</span><span class="mode-option${this.currentFilterMode === 'and' ? ' active' : ''}" data-mode="and">AND</span></span> · <span class="clear-filters">清除</span>`;
+                    fs.style.display = 'flex';
+                    fs.querySelector('.clear-filters')?.addEventListener('click', () => {
+                        this.currentTags.clear();
+                        this.clearTagSelection();
+                        const sb = document.querySelector('#articles .search-box');
+                        this.renderFilteredArticles(sb?.value || '');
+                    });
+                    fs.querySelector('.filter-mode-toggle')?.addEventListener('click', (e) => {
+                        const opt = e.target.closest('.mode-option');
+                        if (!opt) return;
+                        this.currentFilterMode = opt.dataset.mode;
+                        const sb = document.querySelector('#articles .search-box');
+                        this.renderFilteredArticles(sb?.value || '');
+                    });
+                } else {
+                    fs.style.display = 'none';
+                }
+            }
 
             if (filtered.length === 0) {
                 const emptyEl = document.getElementById('articlesEmpty');
@@ -785,13 +935,12 @@
             const emptyEl = document.getElementById('articlesEmpty');
             if (emptyEl) emptyEl.innerHTML = '';
             list.innerHTML = filtered.map((a) => {
-                const realIndex = articles.indexOf(a);
                 const dateStr = formatDate(a.date).replace(/-/g, '.');
                 const tagsHtml = (a.tags || []).map(t =>
                     `<span class="article-tag" data-tag="${t}">#${t}</span>`
                 ).join('');
                 return `
-                    <div class="article-row" data-id="${realIndex}">
+                    <div class="article-row" data-id="${escapeHtml(a.id)}">
                         <span class="article-date">${dateStr}</span>
                         <span class="article-separator">──</span>
                         <span class="article-title">${escapeHtml(a.title)}</span>
@@ -801,8 +950,17 @@
             }).join('');
         }
 
-        openBlogArticle(id) {
-            const article = (typeof articles !== 'undefined') ? articles[id] : null;
+        clearTagSelection() {
+            const tf = document.getElementById('tagFilter');
+            if (!tf) return;
+            const allBtn = tf.querySelector('[data-tag="all"]');
+            tf.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active', 'selected'));
+            if (allBtn) allBtn.classList.add('active');
+        }
+
+        openBlogArticle(articleOrId) {
+            const article = typeof articleOrId === 'object' ? articleOrId
+                : (typeof articles !== 'undefined' ? articles.find(a => a.id === articleOrId) : null);
             if (!article) return;
             this.readerReturnPage = 'articles';
             this.openArticle(article);
@@ -815,8 +973,9 @@
                 this.articleReader.render(article);
                 this.articleReader.show();
                 this.currentPage = 'article_reader';
-                const idx = articles.indexOf(article);
-                window.location.hash = idx >= 0 ? '#article/' + idx : '#readme';
+                if (article.id) {
+                    history.pushState({ articleId: article.id }, '', '/article/' + encodeURIComponent(article.id));
+                }
             });
         }
 
@@ -860,7 +1019,7 @@
             searchBox?.addEventListener('input', (e) => {
                 clearTimeout(searchTimer);
                 searchTimer = setTimeout(() => {
-                    this.renderFilteredArticles(e.target.value, this.currentTag || 'all');
+                    this.renderFilteredArticles(e.target.value);
                 }, 300);
             });
 
@@ -868,13 +1027,30 @@
             tagFilter?.addEventListener('click', (e) => {
                 const btn = e.target.closest('.tag-btn');
                 if (!btn) return;
+                const tagName = btn.dataset.tag;
 
-                tagFilter.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                this.currentTag = btn.dataset.tag;
+                if (tagName === 'all') {
+                    this.currentTags.clear();
+                    this.clearTagSelection();
+                } else {
+                    if (this.currentTags.has(tagName)) {
+                        this.currentTags.delete(tagName);
+                        btn.classList.remove('selected');
+                    } else {
+                        this.currentTags.add(tagName);
+                        btn.classList.add('selected');
+                    }
+                    const activeBtns = tagFilter.querySelectorAll('.tag-btn.selected');
+                    if (activeBtns.length === 0 || this.currentTags.size === 0) {
+                        const allBtn = tagFilter.querySelector('[data-tag="all"]');
+                        if (allBtn) allBtn.classList.add('active');
+                    } else {
+                        const allBtn = tagFilter.querySelector('[data-tag="all"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                    }
+                }
                 const sb = document.querySelector('#articles .search-box');
-                this.renderFilteredArticles(sb?.value || '', this.currentTag);
+                this.renderFilteredArticles(sb?.value || '');
             });
 
             const articlesList = document.getElementById('articlesList');
@@ -884,22 +1060,43 @@
 
                 if (tagEl) {
                     const tagName = tagEl.dataset.tag;
+                    this.currentTags.clear();
+                    this.currentTags.add(tagName);
                     const tf = document.getElementById('tagFilter');
-                    this.currentTag = tagName;
-                    tf?.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-                    const targetBtn = tf?.querySelector(`[data-tag="${tagName}"]`);
-                    targetBtn?.classList.add('active');
+                    if (tf) {
+                        tf.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active', 'selected'));
+                        const allBtn = tf.querySelector('[data-tag="all"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                        const targetBtn = tf.querySelector(`[data-tag="${tagName}"]`);
+                        if (targetBtn) targetBtn.classList.add('selected');
+                    }
                     const sb = document.querySelector('#articles .search-box');
-                    this.renderFilteredArticles(sb?.value || '', tagName);
+                    this.renderFilteredArticles(sb?.value || '');
                     return;
                 }
 
                 if (row) {
-                    const id = parseInt(row.dataset.id, 10);
-                    if (!isNaN(id) && typeof articles !== 'undefined' && articles[id]) {
-                        this.openBlogArticle(id);
+                    const articleId = row.dataset.id;
+                    const article = typeof articles !== 'undefined' ? articles.find(a => a.id === articleId) : null;
+                    if (article) {
+                        this.openBlogArticle(article);
                     }
                 }
+            });
+
+            const tableHeader = document.querySelector('#articles .table-header');
+            tableHeader?.addEventListener('click', (e) => {
+                const col = e.target.closest('.sort-col');
+                if (!col) return;
+                const field = col.dataset.sort;
+                if (this.currentSortField === field) {
+                    this.currentSortDir = this.currentSortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.currentSortField = field;
+                    this.currentSortDir = field === 'date' ? 'desc' : 'asc';
+                }
+                const sb = document.querySelector('#articles .search-box');
+                this.renderFilteredArticles(sb?.value || '');
             });
 
             document.addEventListener('keydown', e => {
@@ -908,6 +1105,27 @@
                     if (!tocHidden) this.articleReader.closeToc();
                     else if (this.currentPage === 'article_reader') this.goBackFromReader();
                     else if (this.currentPage === 'encrypted_list') this.goBackToVault();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                const link = e.target.closest('a[href^="/"]');
+                if (!link) return;
+                e.preventDefault();
+                const href = link.getAttribute('href');
+                const path = href.replace(/^\//, '') || 'home';
+                if (href === '/' || href === '') {
+                    this.navigate('home');
+                    return;
+                }
+                if (path === 'vault') {
+                    this.navigate('vault');
+                } else if (path === 'articles') {
+                    if (sessionStorage.getItem('vaultUnlocked')) {
+                        this.navigate('articles');
+                    } else {
+                        this.navigate('vault');
+                    }
                 }
             });
         }
