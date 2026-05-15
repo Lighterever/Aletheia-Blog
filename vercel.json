@@ -1,5 +1,10 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/#home", "destination": "/", "permanent": true },
+    { "source": "/#vault", "destination": "/vault", "permanent": true },
+    { "source": "/#articles", "destination": "/articles", "permanent": true }
   ]
 }
