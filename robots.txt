@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+Allow: /posts/
+
+Disallow: /data.js
+Disallow: /scripts/
+
+Sitemap: https://www.lighterever.com/sitemap.xml
+
+Crawl-delay: 1

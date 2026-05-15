@@ -83,36 +83,41 @@
 
                 const lang = MarkdownRenderer.extractLang(code.className);
 
-                if (lang) {
-                    const label = document.createElement('span');
-                    label.className = 'code-lang-label';
-                    label.textContent = lang;
-                    pre.appendChild(label);
-                }
-
                 const wrapper = document.createElement('div');
                 wrapper.className = 'code-block-wrapper';
                 pre.parentNode.insertBefore(wrapper, pre);
                 wrapper.appendChild(pre);
 
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'copy-btn';
-                copyBtn.innerHTML = '\u2398';
-                copyBtn.title = 'Copy code';
-                copyBtn.addEventListener('click', () => {
+                const header = document.createElement('div');
+                header.className = 'code-block-header';
+                header.innerHTML = `
+                    <span class="code-language">${lang || 'code'}</span>
+                    <button class="code-copy-btn" title="复制代码">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        <span>复制</span>
+                    </button>
+                `;
+
+                wrapper.insertBefore(header, pre);
+
+                pre.classList.add('code-block-content');
+
+                const copyBtn = header.querySelector('.code-copy-btn');
+                copyBtn.addEventListener('click', async () => {
                     const codeText = code.textContent;
-                    navigator.clipboard.writeText(codeText).then(() => {
+                    try {
+                        await navigator.clipboard.writeText(codeText);
                         copyBtn.classList.add('copied');
-                        copyBtn.innerHTML = '\u2713';
+                        copyBtn.querySelector('span').textContent = '已复制';
                         setTimeout(() => {
                             copyBtn.classList.remove('copied');
-                            copyBtn.innerHTML = '\u2398';
+                            copyBtn.querySelector('span').textContent = '复制';
                         }, 2000);
-                    }).catch(() => {
-                        copyBtn.textContent = 'Err';
-                    });
+                    } catch (e) {}
                 });
-                wrapper.appendChild(copyBtn);
             });
         }
 
@@ -287,14 +292,25 @@
                 `<span class="article-category">#${t}</span>`
             ).join('');
 
+            const textContent = article.content.replace(/[#*`\[\]()_{}]/g, '');
+            const wordCount = textContent.length;
+            const readingTime = Math.max(1, Math.ceil(wordCount / 400));
+
             const metaEl = document.getElementById('articleMeta');
             if (metaEl) {
-                metaEl.innerHTML = `<span class="article-meta-date">${dateStr}</span>${tagsHtml}`;
+                metaEl.innerHTML = `
+                    <span class="article-meta-date">${dateStr}</span>
+                    ${tagsHtml}
+                    <span class="article-meta-stats">
+                        <span class="word-count">${wordCount.toLocaleString()}字</span>
+                        <span class="reading-time">约${readingTime}分钟</span>
+                    </span>
+                `;
             }
 
             MarkdownRenderer.render(article.content, this.content, article.title);
 
-            this.setupArticle();
+            this.setupArticle(article);
 
             if (typeof renderMathInElement !== 'undefined') {
                 try {
@@ -311,12 +327,106 @@
             }
         }
 
-        setupArticle() {
+        setupArticle(article) {
             this.addHeadingIds();
             this.generateToc();
+            this.createLightbox();
+            this.createProgressBar();
             this.createFabs();
+            if (article && typeof articles !== 'undefined') {
+                this.createPostNavigation(article, articles);
+            }
             window.scrollTo(0, 0);
             document.documentElement.style.setProperty('--reading-progress', '0%');
+        }
+
+        createProgressBar() {
+            if (document.querySelector('.reading-progress')) return;
+            const bar = document.createElement('div');
+            bar.className = 'reading-progress';
+            document.body.appendChild(bar);
+        }
+
+        createPostNavigation(currentArticle, articles) {
+            const currentIndex = articles.findIndex(a => a.id === currentArticle.id);
+            const prev = currentIndex > 0 ? articles[currentIndex - 1] : null;
+            const next = currentIndex < articles.length - 1 ? articles[currentIndex + 1] : null;
+
+            if (!prev && !next) return;
+
+            const nav = document.createElement('nav');
+            nav.className = 'post-navigation';
+            nav.innerHTML = `
+                <div class="post-nav-item ${prev ? '' : 'empty'}">
+                    ${prev ? `
+                        <span class="post-nav-label">← 上一篇</span>
+                        <a href="#" class="post-nav-title" data-article-id="${prev.id}">${prev.title}</a>
+                    ` : '<span class="post-nav-placeholder"></span>'}
+                </div>
+                <div class="post-nav-item ${next ? '' : 'empty'}">
+                    ${next ? `
+                        <span class="post-nav-label">下一篇 →</span>
+                        <a href="#" class="post-nav-title" data-article-id="${next.id}">${next.title}</a>
+                    ` : '<span class="post-nav-placeholder"></span>'}
+                </div>
+            `;
+
+            nav.querySelectorAll('.post-nav-title').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const id = link.dataset.articleId;
+                    const article = articles.find(a => a.id === id);
+                    if (article) {
+                        this.render(article);
+                    }
+                });
+            });
+
+            this.content?.appendChild(nav);
+        }
+
+        createLightbox() {
+            let overlay = document.querySelector('.lightbox-overlay');
+            if (overlay) {
+                overlay.querySelector('img').src = '';
+            } else {
+                overlay = document.createElement('div');
+                overlay.className = 'lightbox-overlay';
+                overlay.innerHTML = `
+                    <button class="lightbox-close" aria-label="关闭">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                    <img src="" alt="">
+                `;
+                document.body.appendChild(overlay);
+
+                const close = () => {
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = '';
+                };
+
+                const closeBtn = overlay.querySelector('.lightbox-close');
+                closeBtn?.addEventListener('click', close);
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) close();
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && overlay.classList.contains('active')) close();
+                });
+            }
+
+            const img = overlay.querySelector('img');
+            this.content?.querySelectorAll('img').forEach(imgEl => {
+                imgEl.addEventListener('click', () => {
+                    img.src = imgEl.src;
+                    img.alt = imgEl.alt;
+                    overlay.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                });
+            });
         }
 
         addHeadingIds() {
@@ -392,7 +502,13 @@
         closeToc() { this.tocPanel?.classList.remove('active'); if (this.tocOverlay) this.tocOverlay.classList.add('hidden'); }
 
         show() { this.reader?.classList.remove('hidden'); }
-        hide() { this.closeToc(); this.removeFabs(); this.reader?.classList.add('hidden'); }
+        hide() {
+            this.closeToc();
+            this.removeFabs();
+            this.reader?.classList.add('hidden');
+            const progressBar = document.querySelector('.reading-progress');
+            if (progressBar) progressBar.remove();
+        }
     }
 
     class Vault {

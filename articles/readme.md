@@ -3,6 +3,7 @@ title: README
 date: 2026-05-14
 tags: []
 id: readme
+description: 关于 ℵ · aletheia 博客的 README —— 一个从密钥室走向开放的数学、计算机与哲学探索空间。
 ---
 
 # 一些从深处取出的东西

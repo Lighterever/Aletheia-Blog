@@ -33,7 +33,7 @@ const articles = [
 联系方式：me@lighterever.com`
     },
     {
-        id: 'beside of the bottle',
+        id: 'beside-the-bottle',
         title: '瓶之侧',
         date: '2025-12-07',
         tags: ["人际","心理"],
@@ -170,7 +170,7 @@ const articles = [
 > **它只为自己生长。**`
     },
     {
-        id: 'inside of the bottle',
+        id: 'inside-the-bottle',
         title: '瓶之内',
         date: '2025-12-07',
         tags: ["人际","心理"],

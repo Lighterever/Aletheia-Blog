@@ -1,9 +1,21 @@
 const fs = require('fs');
 const path = require('path');
+const { marked } = require('marked');
 
 const ARTICLES_DIR = path.join(__dirname, '..', 'articles');
 const OUTPUT_FILE = path.join(__dirname, '..', 'data.js');
 const VAULT_KEY = 'aletheia';
+
+const SITE_CONFIG = {
+    baseUrl: 'https://www.lighterever.com',
+    title: 'ℵ · aletheia',
+    description: 'thoughts, unfolded - 数学、计算机、哲学的探索',
+};
+
+marked.setOptions({
+    gfm: true,
+    breaks: false,
+});
 
 function parseFrontmatter(text) {
     const lines = text.split('\n');
@@ -53,6 +65,7 @@ function parseMdFile(filePath) {
         title: meta.title || basename,
         date: meta.date || '',
         tags: meta.tags || [],
+        description: meta.description || '',
         content: content,
     };
 }
@@ -90,6 +103,186 @@ ${entries.join(',\n')}
 `;
 }
 
+function escapeHtml(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function ensurePostsDir() {
+    const postsDir = path.join(__dirname, '..', 'posts');
+    if (!fs.existsSync(postsDir)) {
+        fs.mkdirSync(postsDir, { recursive: true });
+    }
+    return postsDir;
+}
+
+function generateArticleHtml(article, baseUrl) {
+    const htmlContent = marked.parse(article.content);
+    const dateStr = article.date;
+    const tagsStr = (article.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ');
+    const articleUrl = `${baseUrl}/posts/${article.id}/`;
+
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        "headline": article.title,
+        "datePublished": article.date,
+        "description": article.description || '',
+        "url": articleUrl,
+        "publisher": {
+            "@type": "Organization",
+            "name": SITE_CONFIG.title
+        }
+    };
+
+    return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+
+    <title>${escapeHtml(article.title)} - ${SITE_CONFIG.title}</title>
+    <meta name="description" content="${escapeHtml(article.description || '')}">
+    <meta name="author" content="Lighter">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="${articleUrl}">
+
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="${escapeHtml(article.title)}">
+    <meta property="og:description" content="${escapeHtml(article.description || '')}">
+    <meta property="og:url" content="${articleUrl}">
+    <meta property="og:site_name" content="${SITE_CONFIG.title}">
+    <meta property="article:published_time" content="${article.date}">
+${(article.tags || []).map(t => `    <meta property="article:tag" content="${escapeHtml(t)}">`).join('\n')}
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="${escapeHtml(article.title)}">
+    <meta name="twitter:description" content="${escapeHtml(article.description || '')}">
+
+    <link rel="icon" type="image/svg+xml" href="${baseUrl}/favicon.svg">
+    <link rel="stylesheet" href="${baseUrl}/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+    <script type="application/ld+json">
+${JSON.stringify(jsonLd, null, 4)}
+    </script>
+
+    <script>
+        (function() {
+            var theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <nav class="global-nav">
+        <div class="nav-container">
+            <a href="${baseUrl}/" class="nav-logo">
+                <span class="logo-symbol">ℵ</span>
+                <span class="logo-badge">测试中</span>
+            </a>
+            <div class="nav-links">
+                <a href="${baseUrl}/" class="nav-link" data-page="home">首页</a>
+                <a href="${baseUrl}/vault" class="nav-link vault-link">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    密钥室
+                </a>
+                <button class="theme-toggle" id="themeToggle" title="切换主题" onclick="toggleTheme()">
+                    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="article-reader">
+        <article class="article-content">
+            <h1>${escapeHtml(article.title)}</h1>
+            <div class="article-meta">${dateStr}${tagsStr ? ' · ' + tagsStr : ''}</div>
+            <hr class="article-divider">
+            ${htmlContent}
+        </article>
+
+        <div class="article-footer">
+            <a href="${baseUrl}/" class="back-to-home">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                返回首页
+            </a>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <script>
+        function toggleTheme() {
+            var current = document.documentElement.getAttribute('data-theme') || 'dark';
+            var next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof renderMathInElement !== 'undefined') {
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+        });
+    </script>
+</body>
+</html>`;
+}
+
+function generateSitemap(articles, baseUrl) {
+    let urls = articles.map(article => {
+        const lastmod = article.date;
+        const priority = article.tags && article.tags.includes('置顶') ? '1.0' : '0.8';
+        return `  <url>
+    <loc>${baseUrl}/posts/${article.id}/</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>${priority}</priority>
+  </url>`;
+    }).join('\n');
+
+    return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>${baseUrl}/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+${urls}
+</urlset>`;
+}
+
+function generateRobotsTxt(baseUrl) {
+    return `User-agent: *
+Allow: /
+
+Allow: /posts/
+
+Disallow: /data.js
+Disallow: /scripts/
+
+Sitemap: ${baseUrl}/sitemap.xml
+
+Crawl-delay: 1`;
+}
+
 function main() {
     if (!fs.existsSync(ARTICLES_DIR)) {
         console.error('articles/ directory not found');
@@ -108,12 +301,41 @@ function main() {
     const articles = files.map((f) => {
         const filePath = path.join(ARTICLES_DIR, f);
         console.log(`  parsing: ${f}`);
-        return parseMdFile(filePath);
+        const parsed = parseMdFile(filePath);
+
+        if (!parsed.description) {
+            console.warn(`  ⚠ Warning: Missing 'description' in ${f} - SEO description will be empty`);
+        }
+
+        return parsed;
     });
 
     const output = generateDataJs(articles);
     fs.writeFileSync(OUTPUT_FILE, output, 'utf-8');
     console.log(`\nGenerated data.js with ${articles.length} article(s)`);
+
+    const postsDir = ensurePostsDir();
+    console.log(`\nGenerating static HTML pages...`);
+
+    articles.forEach(article => {
+        const articleDir = path.join(postsDir, article.id);
+        if (!fs.existsSync(articleDir)) {
+            fs.mkdirSync(articleDir, { recursive: true });
+        }
+
+        const html = generateArticleHtml(article, SITE_CONFIG.baseUrl);
+        const htmlPath = path.join(articleDir, 'index.html');
+        fs.writeFileSync(htmlPath, html, 'utf-8');
+        console.log(`  ✓ /posts/${article.id}/index.html`);
+    });
+
+    const sitemap = generateSitemap(articles, SITE_CONFIG.baseUrl);
+    fs.writeFileSync(path.join(__dirname, '..', 'sitemap.xml'), sitemap, 'utf-8');
+    console.log(`\nGenerated sitemap.xml`);
+
+    const robotsTxt = generateRobotsTxt(SITE_CONFIG.baseUrl);
+    fs.writeFileSync(path.join(__dirname, '..', 'robots.txt'), robotsTxt, 'utf-8');
+    console.log(`Generated robots.txt`);
 }
 
 main();
