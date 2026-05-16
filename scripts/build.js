@@ -4,6 +4,8 @@ const { marked } = require('marked');
 
 const ARTICLES_DIR = path.join(__dirname, '..', 'articles');
 const OUTPUT_FILE = path.join(__dirname, '..', 'data.js');
+const TIMELINE_DIR = path.join(__dirname, '..', 'timeline');
+const TIMELINE_OUTPUT = path.join(__dirname, '..', 'timeline-data.js');
 const VAULT_KEY = 'aletheia';
 
 const SITE_CONFIG = {
@@ -71,7 +73,7 @@ function parseMdFile(filePath) {
 }
 
 function escapeStringLiteral(str) {
-    return str.replace(/[\\']/g, '\\$&');
+    return str.replace(/[\\'"]/g, '\\$&');
 }
 
 function escapeTemplateLiteral(str) {
@@ -92,8 +94,8 @@ function generateDataJs(articles) {
     });
 
     return `/**
- * 加密博客数据文件（由 scripts/build-articles.js 自动生成）
- * 请勿手动编辑此文件，在 articles/ 目录下添加 .md 文件后运行 node scripts/build-articles.js
+ * 加密博客数据文件（由 scripts/build.js 自动生成）
+ * 请勿手动编辑此文件，在 articles/ 目录下添加 .md 文件后运行 node scripts/build.js
  */
 
 const VAULT_KEY = '${VAULT_KEY}';
@@ -101,6 +103,115 @@ const articles = [
 ${entries.join(',\n')}
 ];
 `;
+
+}
+
+function parseTimelineContent(content) {
+    const entryRegex = /###\s+(\d{4}-\d{2}-\d{2})\s*\n([\s\S]*?)(?=\n###\s+\d{4}-\d{2}-\d{2}|$)/g;
+    const entries = [];
+    let match;
+
+    while ((match = entryRegex.exec(content)) !== null) {
+        const date = match[1];
+        const body = match[2].trim();
+        const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+
+        const contentLines = [];
+        let isInsight = false;
+        const entryTags = [];
+
+        for (const line of lines) {
+            if (line.startsWith('💡')) {
+                isInsight = true;
+                contentLines.push(line);
+            } else if (/^tags\s*:\s*(.+)/i.test(line)) {
+                const raw = line.match(/^tags\s*:\s*(.+)/i)[1];
+                raw.split(/[,，、]/).forEach(function(t) {
+                    const tag = t.trim();
+                    if (tag) entryTags.push(tag);
+                });
+            } else {
+                contentLines.push(line);
+            }
+        }
+
+        entries.push({
+            date: date,
+            content: contentLines.join(' '),
+            isInsight: isInsight,
+            tags: entryTags,
+        });
+    }
+
+    return entries;
+}
+
+function parseTimelineFile(filePath) {
+    var raw = fs.readFileSync(filePath, 'utf-8');
+    var trimmed = raw.trim();
+    var basename = path.basename(filePath, '.md');
+
+    var meta = {};
+    var hasFrontmatter = false;
+    var content = trimmed;
+
+    if (trimmed.startsWith('---')) {
+        var secondDelim = trimmed.indexOf('---', 3);
+        if (secondDelim !== -1) {
+            var frontmatterText = trimmed.slice(3, secondDelim).trim();
+            content = trimmed.slice(secondDelim + 3).trim();
+            meta = parseFrontmatter(frontmatterText);
+            hasFrontmatter = true;
+        }
+    }
+
+    var entries = parseTimelineContent(content);
+    if (entries.length === 0) return null;
+
+    if (!meta.start) {
+        meta.start = entries[0].date;
+    }
+
+    return {
+        id: meta.id || basename,
+        title: meta.title || basename,
+        start: meta.start,
+        end: meta.end || null,
+        tags: meta.tags || [],
+        entries: entries,
+        _loose: !meta.title,
+    };
+}
+
+function generateTimelineJs(topics) {
+    var topicEntries = topics.map(function(topic) {
+        var entriesStr = topic.entries.map(function(e) {
+            var contentEscaped = escapeStringLiteral(e.content);
+            var tagsArr = e.tags || [];
+            var entryTagsStr = JSON.stringify(tagsArr);
+            return '{"date":"' + e.date + '","content":"' + contentEscaped + '","isInsight":' + e.isInsight + ',"tags":' + entryTagsStr + '}';
+        }).join(',');
+        var tagsStr = JSON.stringify(topic.tags);
+        var endVal = topic.end ? "'" + escapeStringLiteral(topic.end) + "'" : 'null';
+        return '    {\n' +
+            '        id: \'' + escapeStringLiteral(topic.id) + '\',\n' +
+            '        title: \'' + escapeStringLiteral(topic.title) + '\',\n' +
+            '        start: \'' + escapeStringLiteral(topic.start) + '\',\n' +
+            '        end: ' + endVal + ',\n' +
+            '        tags: ' + tagsStr + ',\n' +
+            '        _loose: ' + (topic._loose ? 'true' : 'false') + ',\n' +
+            '        entries: [' + entriesStr + ']\n' +
+            '    }';
+    });
+
+    return '/**\n' +
+        ' * 时间轴数据文件（由 scripts/build.js 自动生成）\n' +
+        ' * 请勿手动编辑此文件，在 timeline/ 目录下添加 .md 文件后运行 node scripts/build.js\n' +
+        ' */\n' +
+        '\n' +
+        'var timelineData = [\n' +
+        topicEntries.join(',\n') + '\n' +
+        '];\n';
 }
 
 function escapeHtml(str) {
@@ -336,6 +447,31 @@ function main() {
     const robotsTxt = generateRobotsTxt(SITE_CONFIG.baseUrl);
     fs.writeFileSync(path.join(__dirname, '..', 'robots.txt'), robotsTxt, 'utf-8');
     console.log(`Generated robots.txt`);
+
+    if (!fs.existsSync(TIMELINE_DIR)) {
+        console.log('\ntimeline/ directory not found, skipping timeline generation');
+        return;
+    }
+
+    const timelineFiles = fs.readdirSync(TIMELINE_DIR)
+        .filter((f) => f.endsWith('.md'))
+        .sort();
+
+    if (timelineFiles.length === 0) {
+        console.log('\nNo .md files found in timeline/');
+        return;
+    }
+
+    console.log('\nGenerating timeline data...');
+    const topics = timelineFiles.map((f) => {
+        const filePath = path.join(TIMELINE_DIR, f);
+        console.log(`  parsing timeline: ${f}`);
+        return parseTimelineFile(filePath);
+    }).filter(Boolean);
+
+    const timelineOutput = generateTimelineJs(topics);
+    fs.writeFileSync(TIMELINE_OUTPUT, timelineOutput, 'utf-8');
+    console.log(`\nGenerated timeline-data.js with ${topics.length} topic(s)`);
 }
 
 main();

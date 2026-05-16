@@ -1,5 +1,46 @@
 # VERSION
 
+## v0.2 (2026-05-16)
+
+### 学习轨迹时间轴
+- 新增 `/timeline` 路由，横向画布时间轴页面
+- `TimelineCanvas` 类：支持平移（右键拖拽/双指滑动）、缩放（⌘+滚轮/Ctrl+滚轮/双指捏合）
+- 三级信息密度：概览（主题条+年份）→ 卡片（完整日期+可展开卡片）→ 放大（大号节点+宽卡片）
+- 缩放公式 `pixelsPerDay = 50 × scale^1.3`，支持 25%-120%+ 缩放范围
+- 彩色主题条（`renderTopicBar`）、节点渲染（`renderNode`）、详情卡片（`renderCard`）
+- 主题筛选（`applyTopicFilter`）、定位今天（`locateToToday`）
+- 💡 灵感时刻节点脉冲高亮效果
+- 终端风格控制栏（`.timeline-search-bar`）+ 使用指南弹窗（`.tips-overlay`）
+- `timeline/` 目录存放学习记录 Markdown 文件，YAML frontmatter 定义主题 ID/标题/标签/日期
+
+### 构建系统重构
+- `scripts/build-articles.js` → `scripts/build.js`，合并文章与时间轴数据生成
+- 新增 `parseTimelineContent()` / `parseTimelineFile()` / `generateTimelineJs()` 函数
+- 输出 `data.js` + `timeline-data.js` 两个数据文件
+- `package.json` 构建命令更新为 `node scripts/build.js`
+
+### 样式系统扩展
+- 新增 ~1760 行时间轴 CSS：画布视口（`.canvas-viewport`/`.canvas-content`）、节点、主题条
+- 新增 CSS 变量：`--canvas-bg`、`--node-default`、`--node-insight`、`--node-milestone`、`--node-current`
+- 导航栏毛玻璃效果增强（`blur(24px)` → `blur(28px)`），新增 `slide-up` 动画
+- 404 页面（`404.html`）：密码学风格设计、ASCII 艺术、扫描线效果、点击彩蛋
+
+### 路由与导航
+- 新增 `/timeline`（轨迹）、`/letters`（来信）导航链接
+- 时间轴页面使用终端式顶栏，不显示常规导航
+
+### 其他改进
+- Python 开发服务器 `serve.py`：SPA 路由支持、禁用缓存、端口 3000
+- 文章阅读器字数统计：中英文分开统计（CJK 正则），阅读时间 `中文/400 + 英文/250`
+- 复制功能增强：添加错误处理和用户反馈
+- README 文案微调："那些想完就没了的念头" → "那些想了又想的念头"
+
+### 破坏性变更
+- 构建脚本重命名：`build-articles.js` → `build.js`，需更新 CI/CD 配置
+- 删除旧功能规划文档（`IMPROVEMENT/` 目录下 4 个 `.md` 文件）
+
+---
+
 ## v0.1 (2026-05-15)
 
 ### SPA 路由改造

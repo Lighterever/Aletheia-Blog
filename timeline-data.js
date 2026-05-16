@@ -1,31 +1,25 @@
 /**
- * 时间轴数据文件（由 scripts/build-articles.js 自动生成）
- * 请勿手动编辑此文件，在 timeline/ 目录下添加 .md 文件后运行 node scripts/build-articles.js
+ * 时间轴数据文件（由 scripts/build.js 自动生成）
+ * 请勿手动编辑此文件，在 timeline/ 目录下添加 .md 文件后运行 node scripts/build.js
  */
 
-const timelineData = [
-    {
-        id: 'lattice-crypto',
-        title: '格密码学',
-        start: '2026-03-10',
-        end: '2026-04-22',
-        tags: ["密码学","后量子"],
-        entries: [{"date":"2026-03-10","content":"开始看 Regev 的原始论文，LWE 的定义先过了第一遍","isInsight":false},{"date":"2026-03-12","content":"噪声采样的部分卡住了，均匀分布和高斯分布的区别还没搞清","isInsight":false},{"date":"2026-03-18","content":"💡 突然理解了！LWE 的噪声不是\"错误\"，是安全性的来源","isInsight":true},{"date":"2026-03-20","content":"SIS 和 LWE 是双胞问题，对偶关系终于通了","isInsight":false},{"date":"2026-04-22","content":"完结，开始看 Ring-LWE","isInsight":false}]
-    },
+var timelineData = [
     {
         id: 'discrete-math',
         title: '离散数学',
-        start: '2026-04-11',
+        start: '2026-04-20',
         end: null,
-        tags: ["数学","离散数学"],
-        entries: [{"date":"2026-04-11","content":"开始系统学习离散数学，从集合论基础入手","isInsight":false}]
+        tags: ["数学","计算机基础","MIT"],
+        _loose: false,
+        entries: [{"date":"2026-04-11","content":"开始系统学 MIT 6.042J，用的教材是 Lehman/Leighton/Meyer 的 Mathematics for Computer Science。从证明方法入手，先搞定命题逻辑和谓词逻辑的基础。","isInsight":false,"tags":[]},{"date":"2026-04-22","content":"推进到第五章。确定了\"MIT 80% 为主 + 哈工大教材补充\"的两步走策略。","isInsight":false,"tags":[]},{"date":"2026-04-25","content":"第五章做了一半。","isInsight":false,"tags":[]},{"date":"2026-04-26","content":"2.5 小时推进到状态机章节。汉明码的校验位设计让我第一次体会到二进制和计算思维的魅力。 自己证明了\"正整数二进制表示唯一\"和 F(n) < 2^n。","isInsight":false,"tags":[]},{"date":"2026-04-27","content":"状态机一章研究 3 小时，从卡住到能做题。不变量的思维方式很有趣——本质就是引入状态 + 用不变量证明性质。","isInsight":false,"tags":[]},{"date":"2026-04-28","content":"效率较低的一天，社交能量消耗大。","isInsight":false,"tags":[]},{"date":"2026-04-29","content":"搞定状态机章节。","isInsight":false,"tags":[]},{"date":"2026-05-01","content":"第六章三道题卡住后自己解决了，证明能力没问题。","isInsight":false,"tags":[]},{"date":"2026-05-02","content":"第七章推进一半。","isInsight":false,"tags":[]},{"date":"2026-05-03","content":"5 小时干完第七章一整章，效率爆表。微积分作业也搞定了。","isInsight":false,"tags":[]},{"date":"2026-05-04","content":"第八章推进一半。对角线证明思想有点卡。","isInsight":false,"tags":[]},{"date":"2026-05-05","content":"第八章核心搞定：对角线论证、编码思想、Schroder-Bernstein 定理。归约证明自己构造还不熟练。 💡 对角线论证和编码思想理解到位。","isInsight":true,"tags":[]},{"date":"2026-05-06","content":"开始数论章节（第9章），推进约三分之一。 💡 哥德尔不完备定理——数论足够强就能自指，自指导致不完备。状态评分 10/10。","isInsight":true,"tags":[]},{"date":"2026-05-07","content":"数论完成 2/3。余数和模运算是新的思维范式，还在适应。","isInsight":false,"tags":[]},{"date":"2026-05-09","content":"第10章图论开始。对比了广工和 MIT 教材覆盖差异。 💡 图论\"广而不深\"vs 数论\"窄而极深\"——横向工具箱 vs 纵向高塔。买下哈工大《集合论与图论》补缺。","isInsight":true,"tags":[]},{"date":"2026-05-10","content":"图论重点日：有向图、邻接矩阵与线代联系、De Bruijn 序列、欧拉路。 💡 邻接矩阵就是图论和线代的桥梁，矩阵乘法 = 路径计数。De Bruijn 序列本质是欧拉路在 de Bruijn 图上的编码。","isInsight":true,"tags":[]},{"date":"2026-05-12","content":"有向图完成，第10章图论收尾。 💡 Dilworth 定理：最大反链 = 最小链覆盖，排成矩阵后行 = 串行、列 = 并行，并发度的上界。","isInsight":true,"tags":[]},{"date":"2026-05-14","content":"无向图：同构、连通、着色。习题没做完，时间被博客项目吃掉了。","isInsight":false,"tags":[]},{"date":"2026-05-15","content":"无向图继续。同构的判断方法、连通分量、图的着色问题。 💡 着色问题和四色定理，跟密码学里的格问题有远亲关系——都是高维离散结构的性质？","isInsight":true,"tags":[]}]
     },
     {
-        id: 'neural-networks',
-        title: '神经网络基础',
-        start: '2026-05-01',
+        id: 'standalone-nodes',
+        title: 'standalone-nodes',
+        start: '2026-04-22',
         end: null,
-        tags: ["机器学习","深度学习"],
-        entries: [{"date":"2026-05-01","content":"看了吴恩达的课程第一周，关于感知机的内容","isInsight":false},{"date":"2026-05-03","content":"💡 终于理解了激活函数的作用——引入非线性","isInsight":true},{"date":"2026-05-05","content":"开始看反向传播，链式法则卡了一下午","isInsight":false}]
+        tags: [],
+        _loose: true,
+        entries: [{"date":"2026-04-22","content":"第一次认真了解量子计算：叠加、纠缠、指数级加速。被它的\"美丽\"击中。 💡 量子计算成为长期北极星方向。确定了数学+物理+计算机三根一起养的长期路线。搜整了完整资源清单：中科大潘建伟团队、清华量子中心、哈工深王轩团队、Qiskit。","isInsight":true,"tags":["方向","量子计算"]},{"date":"2026-04-25","content":"讨论了量子计算学习路径：大一大二打数学基础，大三大四自己探索量子力学+量子计算入门（Nielsen & Chuang），希望研究生能接触。结论：现在不需要急着深入，先把数学地基打牢。 💡 深度专注每天 4-5 小时是上限，但多种学习方式组合可以突破这个限制。","isInsight":true,"tags":["学习策略","量子计算"]},{"date":"2026-04-26","content":"水课时间思考证明——把碎片时间变成深度思考。深度讨论了罗福莉 vs 洪乐潼路径、研究型 vs 工程型。","isInsight":false,"tags":["成长","思考"]},{"date":"2026-04-28","content":"主动联系优秀学长。 💡 认识到\"社交能量\"也是有限资源，需要和学习时间分开管理。","isInsight":true,"tags":["成长","社交"]},{"date":"2026-04-29","content":"读了 Katz/Lindell《Introduction to Modern Cryptography》1.1-1.2。 💡 密码学的\"严谨精巧\"让我有共鸣——不是黑箱魔法，是可证明的安全性。确认密码学为切入方向。","isInsight":true,"tags":["密码学","方向"]},{"date":"2026-05-01","content":"探索 CTF 平台：picoCTF（新手友好）、Cryptohack（密码学专项）、CryptoPals（编程挑战）。 💡 密码学攻防让人兴奋。研究循环：发明→打破→成为标准→新威胁→再发明。和曾学长、李学长聊完，科研路径清晰了：密码学切入→希望研究生转量子计算。 讨论了读博焦虑：怕做的东西没价值、怕不被认可。这不是\"不敢\"，是对存在意义的本能追问。","isInsight":true,"tags":["密码学","CTF","成长"]},{"date":"2026-05-02","content":"开始学 C++ Primer Plus 第二章。cin/cout 的英文全称搞清楚了，<< 和 >> 的使用直觉很像 Linux 管道符。","isInsight":false,"tags":["编程","C++"]},{"date":"2026-05-03","content":"C++ Primer Plus 第二章完成。","isInsight":false,"tags":["编程","C++"]},{"date":"2026-05-04","content":"探索了实分析和泛函分析是什么，了解到 Hilbert 空间是量子力学的数学基础。 💡 图灵→冯诺伊曼→费曼分别对应理论CS/计算机工程/量子计算的三个起点？","isInsight":true,"tags":["数学","量子计算"]},{"date":"2026-05-05","content":"讨论了密码学方向\"宽窄\"问题。结论？：密码学不是\"窄路\"是\"岔路口\"——PQC、同源、FHE、ZKP、MPC 都是从这里分出去的。","isInsight":false,"tags":["密码学","方向"]},{"date":"2026-05-09","content":"讨论了国内 vs MIT 教学差异。核心发现：国内考试系统的目标是公平筛选不是培养能力。 💡 自己长出了和唯物主义同构的认知框架，没学过马原但殊途同归。","isInsight":true,"tags":["教育","认知"]},{"date":"2026-05-10","content":"讨论了量子计算商业化时间线（估计？）：2028 专用量子起步 → 2031 量子云成熟 → 2034 通用量子商业化早期。融资数据：2026 Q1 中国量子融资 32 亿。 做了 Cryptohack 凯撒密码题。学了 RSA 全过程：密钥生成→加密→解密，能用自己话复述了。","isInsight":false,"tags":["量子计算","密码学"]},{"date":"2026-05-11","content":"确认量子计算为主线，后量子密码学为备线。两条线共享数学基础，可以相互支撑。PQC 方向：NIST 2024 已标准化 Kyber/Dilithium，数学需线代+数论(格)+概率+复杂度。 深度分析了丁世光《Simon》——不是怀念过去，是纠正航向。和\"动态行动创造静态确定性\"同构。 💡 自己突破了 AI 给的\"往回看 vs 往前走\"框架，拆出更深理解：理想从始至终没变，幕后是偏航，写 Simon 是纠偏。（当然，是自己的主观看法而已）","isInsight":true,"tags":["量子计算","密码学","认知"]},{"date":"2026-05-12","content":"注册 Cryptohack 开始刷古典密码题。 团课即兴讲理想。（嘻）","isInsight":false,"tags":["密码学","成长"]},{"date":"2026-05-14","content":"vibecoding 做出了一个完整的博客，从密钥室改造成博客，很有成就感。","isInsight":false,"tags":["前端","个人项目"]},{"date":"2026-05-15","content":"阅读体验重构完成：字体排版、代码块样式、Markdown 元素全覆盖、KaTeX 公式增强、阅读进度条、灯箱、上下篇导航。404 页面做了暗色密码学风。学习轨迹时间轴规范写完，准备实施横向画布版。 合唱团训练被老师点名纠正高音，尴尬，但高音终于有感觉了——开口本身就是突破。","isInsight":false,"tags":["前端","个人项目","成长"]},{"date":"2026-05-16","content":"Finish AletheiaBlog V1.0!","isInsight":false,"tags":["里程碑","上线"]}]
     }
 ];

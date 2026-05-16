@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - SIGNAL NOT FOUND</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #0f0f18;
+            --accent-primary: #00ff88;
+            --accent-secondary: #7b8cde;
+            --accent-glow: rgba(0, 255, 136, 0.4);
+            --text-primary: #e8e8f0;
+            --text-secondary: #a0a0b8;
+            --text-muted: #606080;
+            --text-dim: #303050;
+            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace;
+            --transition-normal: 0.3s ease;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body {
+            font-family: var(--font-mono);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-layer {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .scatter {
+            position: absolute;
+            font-family: monospace;
+            font-size: 14px;
+            color: rgba(0,255,136,0.3);
+            pointer-events: none;
+            animation: emerge var(--d,6s) ease-in-out var(--delay,0s) infinite;
+        }
+        @keyframes emerge {
+            0%, 100% { opacity: 0; }
+            50%      { opacity: 1; }
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.06) 2px,rgba(0,0,0,0.06) 4px);
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+        .ascii-art { margin-bottom: 1.5rem; }
+
+        .glitch-text {
+            font-family: var(--font-mono);
+            font-size: clamp(0.35rem,1.5vw,0.7rem);
+            line-height: 1.2;
+            color: var(--accent-primary);
+            text-shadow: 0 0 10px var(--accent-glow), 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow);
+            white-space: pre;
+            letter-spacing: 0;
+            animation: text-glow 2s ease-in-out infinite alternate;
+        }
+        @keyframes text-glow {
+            from { text-shadow: 0 0 10px var(--accent-glow), 0 0 20px var(--accent-glow), 0 0 40px var(--accent-glow); }
+            to   { text-shadow: 0 0 15px var(--accent-glow), 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow); }
+        }
+        .glitch-text.easter-egg { animation: glitch 0.3s infinite; }
+        @keyframes glitch {
+            0%,100%{transform:translate(0);text-shadow:0 0 10px var(--accent-glow)}
+            20%{transform:translate(-2px,2px);text-shadow:-2px 0 #ff0055,2px 0 #00ffff}
+            40%{transform:translate(2px,-2px);text-shadow:2px 0 #ff0055,-2px 0 #00ffff}
+            60%{transform:translate(-1px,1px);text-shadow:-1px 0 #ff0055,1px 0 #00ffff}
+            80%{transform:translate(1px,-1px);text-shadow:1px 0 #ff0055,-1px 0 #00ffff}
+        }
+        .subtitle {
+            font-size: clamp(1.2rem,4vw,1.8rem);
+            font-weight: 300;
+            color: var(--accent-secondary);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+            animation: fade-in 1s ease 0.3s both;
+        }
+        .description {
+            font-size: clamp(0.85rem,2vw,1rem);
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            animation: fade-in 1s ease 0.5s both;
+        }
+        .description-cn { color: var(--text-muted); font-size: 0.9em; }
+        @keyframes fade-in { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .error-code {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.4rem 0.8rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--accent-primary);
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+            animation: fade-in 1s ease 0.7s both;
+        }
+        .code-label { color: var(--text-muted); }
+        .code-value { color: var(--accent-primary); font-weight: 500; }
+        .actions { display: flex; gap: 1rem; align-items: center; animation: fade-in 1s ease 0.9s both; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+        .btn-primary { background: var(--accent-primary); color: var(--bg-primary); }
+        .btn-primary:hover { box-shadow: 0 0 20px var(--accent-glow); transform: translateY(-2px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .easter-egg-trigger {
+            position: fixed;
+            bottom: 2rem; right: 2rem;
+            width: 60px; height: 60px;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 100;
+        }
+        .footer {
+            margin-top: auto;
+            padding-bottom: 1.5rem;
+            width: 100%;
+            text-align: center;
+            animation: fade-in 1s ease 1.1s both;
+        }
+        .footer-text { font-size: 0.8rem; color: var(--text-dim); letter-spacing: 0.1em; }
+
+        .container.easter-egg-unlocked .glitch-text { animation: unlock-glitch 0.5s forwards; }
+        .container.easter-egg-unlocked .subtitle,
+        .container.easter-egg-unlocked .error-code { animation: unlock-fade 0.5s forwards; }
+        @keyframes unlock-glitch { 0%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.1) skewX(10deg)} 100%{opacity:0;transform:scale(.8)} }
+        @keyframes unlock-fade { to{opacity:0;transform:translateY(-10px)} }
+
+        .container.success-state .glitch-text { animation: success-pulse 2s ease-in-out infinite; opacity: 1; }
+        .container.success-state .subtitle { opacity: 1; color: var(--accent-primary); animation: none; }
+        .container.success-state .description { opacity: 1; }
+        .container.success-state .description::before { content: '✓ '; }
+        .container.success-state .error-code { opacity: 1; border-color: var(--accent-primary); }
+        .container.success-state .code-value { color: var(--accent-primary); }
+        @keyframes success-pulse { 0%,100%{text-shadow:0 0 10px var(--accent-glow)} 50%{text-shadow:0 0 30px var(--accent-glow),0 0 50px var(--accent-glow)} }
+
+        @media (max-width:768px) {
+            .glitch-text { font-size: clamp(.25rem,2vw,.45rem); }
+            .subtitle { letter-spacing: .15em; }
+            .actions { flex-direction: column; width: 100%; }
+            .btn-primary { width: 100%; justify-content: center; }
+            .easter-egg-trigger { bottom: 1rem; right: 1rem; }
+        }
+        @media (max-width:480px) {
+            .glitch-text { font-size: .2rem; line-height: 1.1; }
+            .subtitle { font-size: 1rem; letter-spacing: .1em; }
+            .description { font-size: .8rem; line-height: 1.6; }
+            .error-code { font-size: .65rem; }
+            .footer { padding-bottom: 1rem; }
+        }
+        @media (max-height:500px) and (orientation:landscape) {
+            .container { justify-content: flex-start; padding-top: 2rem; padding-bottom: 2rem; }
+            .glitch-text { font-size: .25rem; }
+            .ascii-art { margin-bottom: .5rem; }
+            .footer { margin-top: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-layer" id="bg-layer"></div>
+    <div class="scanlines"></div>
+
+    <main class="container">
+        <div class="ascii-art" id="ascii-art">
+            <pre class="glitch-text" data-text="404">
+ ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗ 
+██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝ 
+██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝ 
+            </pre>
+        </div>
+
+        <h2 class="subtitle" id="subtitle">SIGNAL NOT FOUND</h2>
+
+        <p class="description" id="description">
+            The requested path could not be decrypted<br>
+            <span class="description-cn">请求的路径无法解密</span>
+        </p>
+
+        <div class="error-code" id="error-code">
+            <span class="code-label">ERR_</span><span class="code-value">DECRYPT_FAILED</span>
+        </div>
+
+        <div class="actions">
+            <a href="/" class="btn btn-primary">
+                <span class="btn-icon">←</span>
+                <span class="btn-text">Back to Base</span>
+            </a>
+        </div>
+
+        <div class="easter-egg-trigger" id="easter-egg-trigger" title=""></div>
+
+        <footer class="footer">
+            <span class="footer-text">ℵ · aletheia</span>
+        </footer>
+    </main>
+
+    <script>
+    (function() {
+        var bg = document.getElementById('bg-layer');
+        var chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ01';
+        var COUNT = 16;
+
+        var html = '';
+        for (var i = 0; i < COUNT; i++) {
+            var left = Math.random() * 92;
+            var top = Math.random() * 88;
+            var dur = 4 + Math.random() * 5;
+            var delay = Math.random() * dur;
+            var s = '';
+            for (var j = 0; j < 5; j++) {
+                s += chars[(Math.random() * chars.length) | 0];
+            }
+            html += '<span class="scatter" style="left:' + left + '%;top:' + top + '%;--d:' + dur.toFixed(1) + 's;--delay:-' + delay.toFixed(1) + 's;">' + s + '</span>';
+        }
+        bg.innerHTML = html;
+
+        var container = document.querySelector('.container');
+        var asciiArt = document.getElementById('ascii-art');
+        var subtitle = document.getElementById('subtitle');
+        var description = document.getElementById('description');
+        var errorCode = document.getElementById('error-code');
+        var trigger = document.getElementById('easter-egg-trigger');
+
+        var clickCount = 0;
+        var isUnlocked = false;
+
+        function triggerEasterEgg() {
+            if (isUnlocked) return;
+            clickCount++;
+            if (clickCount === 3) trigger.title = '...';
+            else if (clickCount === 5) { trigger.title = '???'; asciiArt.querySelector('.glitch-text').classList.add('easter-egg'); }
+            else if (clickCount >= 7) unlockEasterEgg();
+        }
+
+        function unlockEasterEgg() {
+            isUnlocked = true;
+            trigger.title = '✓ DECODED';
+            asciiArt.querySelector('.glitch-text').classList.remove('easter-egg');
+            container.classList.add('easter-egg-unlocked');
+            setTimeout(function() {
+                container.classList.remove('easter-egg-unlocked');
+                container.classList.add('success-state');
+                var pre = asciiArt.querySelector('pre');
+                pre.setAttribute('data-text', '200');
+                pre.innerHTML = '\n██████╗ ███████╗███████╗███████╗██████╗ \n██╔══██╗██╔════╝██╔════╝██╔════╝██╔══██╗\n██║  ██║█████╗  █████╗  █████╗  ██║  ██║\n██║  ██║██╔══╝  ██╔══╝  ██╔══╝  ██║  ██║\n██████╔╝███████╗██║     ███████╗██████╔╝\n╚═════╝ ╚══════╝╚═╝     ╚══════╝╚═════╝ \n                    ';
+                subtitle.textContent = 'SIGNAL RECOVERED';
+                description.innerHTML = 'The path has been successfully decrypted<br><span class="description-cn">路径已成功解密</span>';
+                errorCode.querySelector('.code-value').textContent = 'DECRYPT_SUCCESS';
+            }, 1000);
+        }
+
+        trigger.addEventListener('click', triggerEasterEgg);
+
+        var uPressCount = 0, uPressTimer = null;
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'u' || e.key === 'U') {
+                uPressCount++;
+                clearTimeout(uPressTimer);
+                uPressTimer = setTimeout(function() { uPressCount = 0; }, 1000);
+                if (uPressCount >= 5) { uPressCount = 0; if (!isUnlocked) { triggerEasterEgg(); triggerEasterEgg(); triggerEasterEgg(); } }
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
