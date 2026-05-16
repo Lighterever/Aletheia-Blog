@@ -3,7 +3,11 @@ const path = require('path');
 const { marked } = require('marked');
 
 const ARTICLES_DIR = path.join(__dirname, '..', 'articles');
-const OUTPUT_FILE = path.join(__dirname, '..', 'data.js');
+const DATA_DIR = path.join(__dirname, '..', 'data');
+const OUTPUT_FILE = path.join(DATA_DIR, 'data.js');
+const TIMELINE_DIR = path.join(__dirname, '..', 'timeline');
+const TIMELINE_OUTPUT = path.join(DATA_DIR, 'timeline-data.js');
+const README_FILE = path.join(__dirname, '..', 'about.md');
 const VAULT_KEY = 'aletheia';
 
 const SITE_CONFIG = {
@@ -71,14 +75,14 @@ function parseMdFile(filePath) {
 }
 
 function escapeStringLiteral(str) {
-    return str.replace(/[\\']/g, '\\$&');
+    return str.replace(/[\\'"]/g, '\\$&');
 }
 
 function escapeTemplateLiteral(str) {
     return str.replace(/[\\`]/g, '\\$&').replace(/\$\{/g, '\\${');
 }
 
-function generateDataJs(articles) {
+function generateDataJs(articles, aboutArticle) {
     const entries = articles.map((a) => {
         const escapedContent = escapeTemplateLiteral(a.content);
         const tagsStr = JSON.stringify(a.tags);
@@ -91,16 +95,146 @@ function generateDataJs(articles) {
     }`;
     });
 
+    var aboutJs = '';
+    if (aboutArticle) {
+        var ac = escapeTemplateLiteral(aboutArticle.content);
+        var at = JSON.stringify(aboutArticle.tags);
+        aboutJs = `
+window.aboutInfo = {
+    id: '${escapeStringLiteral(aboutArticle.id)}',
+    title: '${escapeStringLiteral(aboutArticle.title)}',
+    date: '${escapeStringLiteral(aboutArticle.date)}',
+    tags: ${at},
+    content: \`${ac}\`
+};`;
+    }
+
     return `/**
- * 加密博客数据文件（由 scripts/build-articles.js 自动生成）
- * 请勿手动编辑此文件，在 articles/ 目录下添加 .md 文件后运行 node scripts/build-articles.js
+ * 加密博客数据文件（由 scripts/build.js 自动生成）
+ * 请勿手动编辑此文件，在 articles/ 目录下添加 .md 文件后运行 node scripts/build.js
  */
 
-const VAULT_KEY = '${VAULT_KEY}';
-const articles = [
+window.VAULT_KEY = '${VAULT_KEY}';
+window.articles = [
 ${entries.join(',\n')}
-];
+];${aboutJs}
 `;
+
+}
+
+function parseTimelineContent(content) {
+    const entryRegex = /###\s+(\d{4}-\d{2}-\d{2})\s*\n([\s\S]*?)(?=\n###\s+\d{4}-\d{2}-\d{2}|$)/g;
+    const entries = [];
+    let match;
+
+    while ((match = entryRegex.exec(content)) !== null) {
+        const date = match[1];
+        const body = match[2].trim();
+        const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+
+        const contentLines = [];
+        let isInsight = false;
+        const entryTags = [];
+        let articleLink = '';
+
+        for (const line of lines) {
+            if (line.startsWith('💡')) {
+                isInsight = true;
+                contentLines.push(line);
+            } else if (/^tags\s*:\s*(.+)/i.test(line)) {
+                const raw = line.match(/^tags\s*:\s*(.+)/i)[1];
+                raw.split(/[,，、]/).forEach(function(t) {
+                    const tag = t.trim();
+                    if (tag) entryTags.push(tag);
+                });
+            } else if (/^link\s*:\s*(.+)/i.test(line)) {
+                articleLink = line.match(/^link\s*:\s*(.+)/i)[1].trim();
+            } else {
+                contentLines.push(line);
+            }
+        }
+
+        entries.push({
+            date: date,
+            content: contentLines.join(' '),
+            isInsight: isInsight,
+            tags: entryTags,
+            articleLink: articleLink,
+        });
+    }
+
+    entries.sort((a, b) => a.date.localeCompare(b.date));
+
+    return entries;
+}
+
+function parseTimelineFile(filePath) {
+    var raw = fs.readFileSync(filePath, 'utf-8');
+    var trimmed = raw.trim();
+    var basename = path.basename(filePath, '.md');
+
+    var meta = {};
+    var hasFrontmatter = false;
+    var content = trimmed;
+
+    if (trimmed.startsWith('---')) {
+        var secondDelim = trimmed.indexOf('---', 3);
+        if (secondDelim !== -1) {
+            var frontmatterText = trimmed.slice(3, secondDelim).trim();
+            content = trimmed.slice(secondDelim + 3).trim();
+            meta = parseFrontmatter(frontmatterText);
+            hasFrontmatter = true;
+        }
+    }
+
+    var entries = parseTimelineContent(content);
+    if (entries.length === 0) return null;
+
+    if (!meta.start) {
+        meta.start = entries[0].date;
+    }
+
+    return {
+        id: meta.id || basename,
+        title: meta.title || basename,
+        start: meta.start,
+        end: meta.end || null,
+        tags: meta.tags || [],
+        entries: entries,
+        _loose: !meta.title,
+    };
+}
+
+function generateTimelineJs(topics) {
+    var topicEntries = topics.map(function(topic) {
+        var entriesStr = topic.entries.map(function(e) {
+            var contentEscaped = escapeStringLiteral(e.content);
+            var tagsArr = e.tags || [];
+            var entryTagsStr = JSON.stringify(tagsArr);
+            var linkStr = e.articleLink ? '"' + escapeStringLiteral(e.articleLink) + '"' : 'null';
+            return '{"date":"' + e.date + '","content":"' + contentEscaped + '","isInsight":' + e.isInsight + ',"tags":' + entryTagsStr + ',"articleLink":' + linkStr + '}';
+        }).join(',');
+        var tagsStr = JSON.stringify(topic.tags);
+        var endVal = topic.end ? "'" + escapeStringLiteral(topic.end) + "'" : 'null';
+        return '    {\n' +
+            '        id: \'' + escapeStringLiteral(topic.id) + '\',\n' +
+            '        title: \'' + escapeStringLiteral(topic.title) + '\',\n' +
+            '        start: \'' + escapeStringLiteral(topic.start) + '\',\n' +
+            '        end: ' + endVal + ',\n' +
+            '        tags: ' + tagsStr + ',\n' +
+            '        _loose: ' + (topic._loose ? 'true' : 'false') + ',\n' +
+            '        entries: [' + entriesStr + ']\n' +
+            '    }';
+    });
+
+    return '/**\n' +
+        ' * 时间轴数据文件（由 scripts/build.js 自动生成）\n' +
+        ' * 请勿手动编辑此文件，在 timeline/ 目录下添加 .md 文件后运行 node scripts/build.js\n' +
+        ' */\n' +
+        '\n' +
+        'window.timelineData = [\n' +
+        topicEntries.join(',\n') + '\n' +
+        '];\n';
 }
 
 function escapeHtml(str) {
@@ -165,7 +299,13 @@ ${(article.tags || []).map(t => `    <meta property="article:tag" content="${esc
     <meta name="twitter:description" content="${escapeHtml(article.description || '')}">
 
     <link rel="icon" type="image/svg+xml" href="${baseUrl}/favicon.svg">
-    <link rel="stylesheet" href="${baseUrl}/style.css">
+    <link rel="stylesheet" href="${baseUrl}/css/base.css">
+    <link rel="stylesheet" href="${baseUrl}/css/home.css">
+    <link rel="stylesheet" href="${baseUrl}/css/vault.css">
+    <link rel="stylesheet" href="${baseUrl}/css/articles.css">
+    <link rel="stylesheet" href="${baseUrl}/css/reader.css">
+    <link rel="stylesheet" href="${baseUrl}/css/timeline.css">
+    <link rel="stylesheet" href="${baseUrl}/css/letters.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -275,7 +415,7 @@ Allow: /
 
 Allow: /posts/
 
-Disallow: /data.js
+Disallow: /data/
 Disallow: /scripts/
 
 Sitemap: ${baseUrl}/sitemap.xml
@@ -289,11 +429,21 @@ function main() {
         process.exit(1);
     }
 
+    if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+
+    var aboutArticle = null;
+    if (fs.existsSync(README_FILE)) {
+        console.log('  parsing: readme.md (standalone)');
+        aboutArticle = parseMdFile(README_FILE);
+    }
+
     const files = fs.readdirSync(ARTICLES_DIR)
         .filter((f) => f.endsWith('.md'))
         .sort();
 
-    if (files.length === 0) {
+    if (files.length === 0 && !aboutArticle) {
         console.log('No .md files found in articles/');
         return;
     }
@@ -310,12 +460,22 @@ function main() {
         return parsed;
     });
 
-    const output = generateDataJs(articles);
+    const output = generateDataJs(articles, aboutArticle);
     fs.writeFileSync(OUTPUT_FILE, output, 'utf-8');
     console.log(`\nGenerated data.js with ${articles.length} article(s)`);
 
     const postsDir = ensurePostsDir();
     console.log(`\nGenerating static HTML pages...`);
+
+    if (aboutArticle) {
+        const aboutDir = path.join(postsDir, aboutArticle.id);
+        if (!fs.existsSync(aboutDir)) {
+            fs.mkdirSync(aboutDir, { recursive: true });
+        }
+        const aboutHtml = generateArticleHtml(aboutArticle, SITE_CONFIG.baseUrl);
+        fs.writeFileSync(path.join(aboutDir, 'index.html'), aboutHtml, 'utf-8');
+        console.log(`  ✓ /posts/${aboutArticle.id}/index.html`);
+    }
 
     articles.forEach(article => {
         const articleDir = path.join(postsDir, article.id);
@@ -329,13 +489,40 @@ function main() {
         console.log(`  ✓ /posts/${article.id}/index.html`);
     });
 
-    const sitemap = generateSitemap(articles, SITE_CONFIG.baseUrl);
+    var allForSitemap = [...articles];
+    if (aboutArticle) allForSitemap.push(aboutArticle);
+    const sitemap = generateSitemap(allForSitemap, SITE_CONFIG.baseUrl);
     fs.writeFileSync(path.join(__dirname, '..', 'sitemap.xml'), sitemap, 'utf-8');
     console.log(`\nGenerated sitemap.xml`);
 
     const robotsTxt = generateRobotsTxt(SITE_CONFIG.baseUrl);
     fs.writeFileSync(path.join(__dirname, '..', 'robots.txt'), robotsTxt, 'utf-8');
     console.log(`Generated robots.txt`);
+
+    if (!fs.existsSync(TIMELINE_DIR)) {
+        console.log('\ntimeline/ directory not found, skipping timeline generation');
+        return;
+    }
+
+    const timelineFiles = fs.readdirSync(TIMELINE_DIR)
+        .filter((f) => f.endsWith('.md'))
+        .sort();
+
+    if (timelineFiles.length === 0) {
+        console.log('\nNo .md files found in timeline/');
+        return;
+    }
+
+    console.log('\nGenerating timeline data...');
+    const topics = timelineFiles.map((f) => {
+        const filePath = path.join(TIMELINE_DIR, f);
+        console.log(`  parsing timeline: ${f}`);
+        return parseTimelineFile(filePath);
+    }).filter(Boolean);
+
+    const timelineOutput = generateTimelineJs(topics);
+    fs.writeFileSync(TIMELINE_OUTPUT, timelineOutput, 'utf-8');
+    console.log(`\nGenerated timeline-data.js with ${topics.length} topic(s)`);
 }
 
 main();

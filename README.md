@@ -1,149 +1,276 @@
+<p align="center">
+  <a href="./README.md">English</a> ·
+  <a href="./README.zh-CN.md">简体中文</a>
+</p>
+<br>
+
 # ℵ · aletheia
 
-> 个人博客。think, write, unfold.
+<p align="center">
+  <em>think, write, unfold.</em>
+</p>
 
-纯前端极简博客，SPA + History API 路由。主页展示思想片段和入口，密钥室作为内容门槛，解锁后进入文章检索页浏览和阅读。支持 GitHub Flavored Markdown、KaTeX 数学公式、语法高亮、深浅双主题。
+<p align="center">
+  <a href="#-features"><strong>Features</strong></a> ·
+  <a href="#-quick-start"><strong>Quick Start</strong></a> ·
+  <a href="#-project-structure"><strong>Structure</strong></a> ·
+  <a href="#-writing-content"><strong>Writing</strong></a> ·
+  <a href="#-deployment"><strong>Deploy</strong></a>
+</p>
 
 ---
 
-## 项目结构
+A pure front-end minimalist blog built as a SPA with History API routing. Features a cryptographic vault as the content gateway — unlock to browse articles. Dark/light dual-theme, Markdown rendering, KaTeX math, code highlighting, an interactive learning timeline, and a letters page.
+
+---
+
+## ✨ Features
+
+<table>
+<tr><td width="50%">
+
+**🔐 Cryptographic Vault**
+Matrix Rain background, terminal-style password input, AES decryption, unlock ripple animation.
+
+**📝 Article System**
+Markdown with YAML frontmatter. Build pipeline generates encrypted data + static HTML for SEO. Tag filtering with OR/AND logic, full-text search with 300ms debounce.
+
+**🕐 Learning Timeline**
+Horizontal canvas timeline. Pan (left-drag / touch), zoom (⌘+scroll / pinch), click-to-expand detail cards. Topic bars with freeze-pane labels, node merging, ongoing indicators, topic filtering, hover preview, date search, locate-to-today.
+
+</td><td width="50%">
+
+**🎨 Dual-Theme Design**
+CSS variable-driven. Liquid glass reader, noise texture background, glass-morphism navbar, 3-tier shadow system. Dark: `#0a0a0f` / Light: `#fafafa`.
+
+**🧮 Rich Typography**
+KaTeX math (inline & display), syntax highlighting via highlight.js, GF Markdown via marked.js, code block language labels + copy buttons, heading anchors, reading progress bar, TOC panel.
+
+**📬 Letters Page**
+A dedicated space for incoming letters/chronicles with date-range display.
+
+</td></tr>
+</table>
+
+---
+
+## 📦 Project Structure
 
 ```
 /
-├── index.html         ← 全部视图层
-├── style.css          ← CSS 变量驱动的双主题样式
-├── app.js             ← OOP 核心（8 类 + MarkdownRenderer）
-├── data.js            ← 文章数据（由构建脚本自动生成）
-├── vercel.json        ← SPA rewrite 规则
-├── articles/          ← 文章源文件（.md + YAML frontmatter）
-├── scripts/           ← 构建工具
-└── README.md
+├── index.html              ← SPA entry (all views)
+│
+├── css/                    ← CSS modules (7 files)
+│   ├── base.css            ← CSS reset, variables, utilities
+│   ├── home.css            ← Home page + Caesar wheel animation
+│   ├── vault.css           ← Vault + Matrix Rain
+│   ├── articles.css        ← Article listing + tag filters
+│   ├── reader.css          ← Article reader + TOC + progress bar
+│   ├── timeline.css        ← Timeline canvas (nodes, bars, cards, controls)
+│   └── letters.css         ← Letters page
+│
+├── js/                     ← Front-end logic (ES modules)
+│   ├── app.js              ← App controller, routing, Crypto
+│   ├── utils.js            ← Shared utilities
+│   ├── core/               ← Core components (5 files)
+│   └── pages/              ← Page controllers (4 files)
+│
+├── articles/               ← Article sources (.md + YAML frontmatter)
+├── timeline/               ← Timeline sources (.md + YAML frontmatter)
+│
+├── data/                   ← Build outputs
+│   ├── data.js             ← Encrypted article data
+│   └── timeline-data.js    ← Timeline data
+│
+├── posts/                  ← Static HTML (SEO, auto-generated)
+│
+├── scripts/                ← Tooling
+│   ├── build.js            ← Unified build (articles + timeline)
+│   └── serve.py            ← Dev server with SPA rewrite
+│
+├── vercel.json             ← Vercel SPA rewrite rules
+├── 404.html                ← Crypto-themed 404 page
+├── sitemap.xml             ← Auto-updated sitemap
+└── robots.txt              ← SEO robots
 ```
 
 ---
 
-## 页面与路由
+## 🚀 Quick Start
 
-SPA 架构，History API 路由（无 `#`）。
+```bash
+# Clone and enter
+git clone <repo-url> && cd aletheia
 
-| URL | 页面 | 导航栏 | 需要解锁 |
-|-----|------|--------|----------|
-| `/` | 主页 | 显示 | 否 |
-| `/vault` | 密钥输入页 | 显示 | 否 |
-| `/articles` | 文章检索页 | 显示 | 是 |
-| `/article/{id}` | 文章阅读页 | 隐藏 | 是 |
-| `/readme` | README 文 | 隐藏 | 否 |
+# Build data files
+node scripts/build.js
 
-### 主页（`/`）
+# Start dev server
+python3 scripts/serve.py
+# → http://localhost:3000
+```
 
-Hero 区展示 `ℵ · aletheia` 标题和标签行，密钥室入口按钮，README 卡片，footer。Caesar 密码轮背景动画（hover 脉冲发光）。
-
-### 密钥室（`/vault`）
-
-终端风格输入框，密钥 `aletheia` 解锁。Matrix Rain 背景动画 + 环形扩散解锁特效 + 解密进度动画。
-
-- `sessionStorage` 持久化解锁状态，刷新不丢失，关闭标签页清除
-- 未解锁访问 `/articles` 或 `/article/*` 自动重定向到 `/vault`
-
-### 文章检索页（`/articles`）
-
-四层布局：
-1. **顶栏**：ℵ Logo + 搜索框（`grep...`）+ Exit 按钮
-2. **终端风格列表头**：`DATE` / `TITLE` / `TAGS` 列头，可点击排序
-3. **标签筛选栏**：多选标签按钮 + OR/AND 切换 + 筛选计数 + 清除
-4. **文章列表**：日期 ── 标题  #标签
-
-搜索匹配标题、标签和正文，300ms 防抖。标签支持多选组合和 OR/AND 逻辑。
-
-### 文章阅读页（`/article/{id}`）
-
-打字机标题动画、Markdown 渲染（marked.js + github-markdown-css）、highlight.js 语法高亮、KaTeX 数学公式、代码块语言标签 + 复制按钮、标题锚点、右侧 TOC 目录面板、阅读进度条。液态玻璃毛效果阅读器。
+**Vault password**: `aletheia`
 
 ---
 
-## OOP 架构
+## 🗺️ Routes
 
-```
-App（主控制器）
-├── Theme            ← 深浅色主题切换（localStorage 持久化）
-├── Navbar           ← 全局导航栏（毛玻璃 + 滚动态）
-├── Typewriter       ← 打字机标题动画
-├── MatrixRain       ← Matrix数字雨背景（密钥室专属）
-├── ArticleReader    ← 文章阅读（MarkdownRenderer + TOC + 进度条）
-├── MarkdownRenderer ← Markdown 渲染增强（静态类：语法高亮/复制/锚点/表格）
-├── Vault            ← 密钥验证 + 解锁特效（Web Animation API）
-└── Crypto           ← AES 解密（静态方法）
-```
+| URL | Page | Navbar | Protected |
+|-----|------|--------|-----------|
+| `/` | Home | ✓ | — |
+| `/vault` | Vault (password gate) | ✓ | — |
+| `/articles` | Article listing + search | ✓ | 🔒 |
+| `/article/{slug}` | Article reader + TOC | ✗ | 🔒 |
+| `/timeline` | Learning timeline canvas | custom bar | — |
+| `/letters` | Letters page | ✓ | — |
+| `/readme` | Site introduction (standalone) | ✗ | — |
 
-统一导航入口 `App.navigate(page)`，每次切换先隐藏所有页面。
+SPA architecture, History API routing (no `#`). Vault state persists in `sessionStorage` — survives refresh, clears on tab close.
 
 ---
 
-## 样式
+## 📝 Writing Content
 
-暗色/浅色双主题，CSS 变量驱动。液态玻璃阅读器、噪点纹理背景、三级阴影系统、毛玻璃导航栏。
+### Articles
 
-| 变量 | 暗色 | 浅色 |
-|------|------|------|
+Create `.md` files in `articles/` with YAML frontmatter:
+
+```markdown
+---
+title: My Article Title
+date: 2026-05-20
+tags: [cryptography, math]
+id: article-slug
+description: SEO description (one line)
+---
+
+# My Article Title
+
+## Section One
+
+Content here...
+```
+
+| Field | Required | Notes |
+|-------|:-------:|-------|
+| `title` | ✓ | Page title + listing display |
+| `date` | ✓ | `YYYY-MM-DD`, used for sorting & SEO |
+| `tags` | | Comma-separated, supports CJK: `[密码学, 数学]` |
+| `id` | | URL slug, defaults to filename |
+| `description` | | SEO meta description |
+
+**Heading rules**: H1 exactly once (must match frontmatter `title`), then H2 → H3. No skipping levels.
+
+### Timeline Entries
+
+Create `.md` files in `timeline/` with YAML frontmatter + `### YYYY-MM-DD` date entries:
+
+```markdown
+---
+id: discrete-math
+title: Discrete Mathematics
+tags: [math, CS]
+start: 2026-04-20
+---
+
+### 2026-04-22
+tags: milestones, logic
+
+Worked through propositional logic basics.
+
+### 2026-04-25
+tags: set-theory
+
+Set theory and cardinality.
+💡 Diagonal argument — self-reference leads to incompleteness.
+```
+
+| Field | Scope | Notes |
+|-------|-------|-------|
+| `title` | frontmatter | Topic name (empty = standalone loose node) |
+| `tags` | frontmatter | Topic-level tags (applied to all cards) |
+| `start` / `end` | frontmatter | `YYYY-MM-DD`. No `end` = ongoing (gradient fade + pulse dot) |
+| `tags:` | entry line | Entry-level tags (merged with topic tags) |
+| `💡` | line prefix | Insight moment — node gets pulse glow animation |
+
+Build everything with:
+
+```bash
+node scripts/build.js
+```
+
+---
+
+## 🎨 Design System
+
+| CSS Variable | Dark | Light |
+|-------------|------|-------|
 | `--bg-primary` | `#0a0a0f` | `#fafafa` |
 | `--accent-primary` | `#00ff88` | `#0a7d4f` |
 | `--text-primary` | `#e8e8f0` | `#1a1a2e` |
 | `--text-muted` | `#606080` | `#8888a0` |
 
-字体：中文 `Noto Serif SC`，等宽 `JetBrains Mono`。
+**Typography**: Body `Noto Serif SC`, Mono `JetBrains Mono`.
+
+**Highlights**: Liquid-glass reader, glass-morphism navbar with scroll-aware hide/show, noise texture background (SVG turbulence), 3-tier shadow system, Caesar cipher wheel animation on home page.
 
 ---
 
-## 添加文章
+## 🧱 Architecture
 
-在 `articles/` 目录下创建 `.md` 文件，使用 YAML frontmatter：
-
-```markdown
----
-title: 文章标题
-date: 2026-05-15
-tags: [数学, 算法]
-id: article-slug
----
-
-# 标题
-
-正文 Markdown...
+```
+App (controller)
+├── Theme              ← Dual-theme with localStorage persistence
+├── Navbar             ← Glass navbar, scroll-aware, active state
+├── Typewriter         ← Title animation with configurable speed
+├── MatrixRain         ← Canvas-based digital rain (vault only)
+├── Vault              ← AES auth, unlock effects (Web Animation API)
+├── ArticleReader      ← Markdown → DOM, TOC, progress bar
+├── MarkdownRenderer   ← Static pipeline: highlight / anchor / copy / table
+├── TimelineCanvas     ← Canvas timeline (drag, zoom, nodes, cards, filter)
+├── LettersPage        ← Letters display
+└── Crypto             ← AES decryption (static)
 ```
 
-运行构建脚本生成 `data.js`：
+**9 classes** organized into `core/` (reusable) and `pages/` (route-specific). ES modules — no bundler needed, runs directly in modern browsers.
+
+---
+
+## 📦 CDN Dependencies
+
+| Library | Purpose |
+|---------|---------|
+| `marked.js` 9.1.6 | Markdown → HTML |
+| `highlight.js` 11.9.0 | Code syntax highlighting |
+| `github-markdown-css` 5.6.1 | GitHub-style typography |
+| `KaTeX` 0.16.9 | LaTeX math rendering |
+| `CryptoJS` 4.2.0 | AES encryption (vault) |
+
+---
+
+## 🚢 Deployment
+
+### Vercel (recommended)
+
+Push to Vercel — `vercel.json` handles SPA rewrite rules automatically.
+
+### Static hosting
 
 ```bash
-node scripts/build-articles.js
+node scripts/build.js
+# Serve the root directory as a static site
 ```
 
-- `id` 可选，不填使用文件名
-- 标签用逗号分隔，支持中文：`tags: [人际, 心理]`
-- 数学公式用 KaTeX 语法：行内 `$E=mc^2$`，行间 `$$\int$$`
-
----
-
-## CDN 依赖
-
-| 库 | 用途 |
-|----|------|
-| `marked.js` 9.1.6 | Markdown 解析 |
-| `highlight.js` 11.9.0 | 代码语法高亮 |
-| `github-markdown-css` 5.6.1 | GitHub 风格 Markdown 排版 |
-| `KaTeX` 0.16.9 | 数学公式渲染 |
-| `CryptoJS` 4.2.0 | AES 加密（备用） |
-
----
-
-## 部署
-
-### Vercel（推荐）
-
-项目根目录已包含 `vercel.json`，直接 push 到 Vercel 即可。SPA rewrite 规则自动生效。
-
-### 本地运行
+### Local dev
 
 ```bash
-python3 -m http.server 3000
-# 访问 http://localhost:3000
+python3 scripts/serve.py
+# → http://localhost:3000
 ```
+
+---
+
+<p align="center">
+  <sub>Built with vibecoding. Deployed on Vercel. Content encrypted with AES.</sub>
+</p>

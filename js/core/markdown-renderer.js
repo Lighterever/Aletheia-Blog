@@ -1,0 +1,126 @@
+/**
+ * Markdown 渲染器
+ */
+
+import { escapeHtml } from '../utils.js';
+
+export class MarkdownRenderer {
+    static init() {
+        window.marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+    }
+
+    static render(content, targetElement, title) {
+        if (!targetElement) return;
+
+        let html = window.marked.parse(content);
+
+        if (title && !/<h1[ >]/.test(html)) {
+            html = `<h1>${escapeHtml(title)}</h1>` + html;
+        }
+
+        targetElement.innerHTML = html;
+        targetElement.classList.add('markdown-body');
+
+        if (typeof window.hljs !== 'undefined') {
+            try { window.hljs.highlightAll(); } catch (e) {}
+        }
+
+        MarkdownRenderer.enhanceCodeBlocks(targetElement);
+        MarkdownRenderer.addHeadingAnchors(targetElement);
+        MarkdownRenderer.wrapTables(targetElement);
+    }
+
+    static enhanceCodeBlocks(container) {
+        const pres = container.querySelectorAll('pre');
+        pres.forEach(pre => {
+            const code = pre.querySelector('code');
+            if (!code) return;
+
+            const lang = MarkdownRenderer.extractLang(code.className);
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'code-block-wrapper';
+            pre.parentNode.insertBefore(wrapper, pre);
+            wrapper.appendChild(pre);
+
+            const header = document.createElement('div');
+            header.className = 'code-block-header';
+            header.innerHTML = `
+                <span class="code-language">${lang || 'code'}</span>
+                <button class="code-copy-btn" title="复制代码">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>复制</span>
+                </button>
+            `;
+
+            wrapper.insertBefore(header, pre);
+
+            pre.classList.add('code-block-content');
+
+            const copyBtn = header.querySelector('.code-copy-btn');
+            copyBtn.addEventListener('click', async () => {
+                const codeText = code.textContent;
+                try {
+                    await navigator.clipboard.writeText(codeText);
+                    copyBtn.classList.add('copied');
+                    copyBtn.querySelector('span').textContent = '已复制';
+                    setTimeout(() => {
+                        copyBtn.classList.remove('copied');
+                        copyBtn.querySelector('span').textContent = '复制';
+                    }, 2000);
+                } catch (e) {
+                    console.error('Failed to copy:', e);
+                    copyBtn.querySelector('span').textContent = '复制失败';
+                    setTimeout(() => {
+                        copyBtn.querySelector('span').textContent = '复制';
+                    }, 2000);
+                }
+            });
+        });
+    }
+
+    static extractLang(className) {
+        const match = className.match(/language-(\S+)/);
+        return match ? match[1] : '';
+    }
+
+    static addHeadingAnchors(container) {
+        const headings = container.querySelectorAll('h2, h3, h4');
+        headings.forEach((h, i) => {
+            if (!h.id) {
+                h.id = 'heading-' + i;
+            }
+            const anchor = document.createElement('a');
+            anchor.className = 'heading-anchor';
+            anchor.href = '#' + h.id;
+            anchor.innerHTML = '\u00A7';
+            anchor.setAttribute('aria-label', 'Permalink to ' + h.textContent.trim());
+            h.insertBefore(anchor, h.firstChild);
+        });
+    }
+
+    static wrapTables(container) {
+        const tables = container.querySelectorAll('table');
+        tables.forEach(table => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'table-wrapper';
+            table.parentNode.insertBefore(wrapper, table);
+            wrapper.appendChild(table);
+        });
+    }
+
+    static switchTheme(isDark) {
+        const hlDark = document.getElementById('hljs-dark-theme');
+        const hlLight = document.getElementById('hljs-light-theme');
+        const ghDark = document.getElementById('gh-md-dark-theme');
+        const ghLight = document.getElementById('gh-md-light-theme');
+
+        if (hlDark) hlDark.disabled = !isDark;
+        if (hlLight) hlLight.disabled = isDark;
+        if (ghDark) ghDark.disabled = !isDark;
+        if (ghLight) ghLight.disabled = isDark;
+    }
+}

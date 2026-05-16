@@ -3,7 +3,7 @@ Allow: /
 
 Allow: /posts/
 
-Disallow: /data.js
+Disallow: /data/
 Disallow: /scripts/
 
 Sitemap: https://www.lighterever.com/sitemap.xml

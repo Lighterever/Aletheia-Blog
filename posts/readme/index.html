@@ -23,7 +23,13 @@
     <meta name="twitter:description" content="关于 ℵ · aletheia 博客的 README —— 一个从密钥室走向开放的数学、计算机与哲学探索空间。">
 
     <link rel="icon" type="image/svg+xml" href="https://www.lighterever.com/favicon.svg">
-    <link rel="stylesheet" href="https://www.lighterever.com/style.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/base.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/home.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/vault.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/articles.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/reader.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/timeline.css">
+    <link rel="stylesheet" href="https://www.lighterever.com/css/letters.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -85,13 +91,73 @@
 <ul>
 <li>我学数学和计算机时挖到的底层结构——比如贪心算法为什么是对的，不只是怎么用</li>
 <li>技术项目的完整记录——从为什么开始，到卡在哪里，到怎么解决</li>
-<li>一些深夜想出来的东西——关于理想、意义、应试，那些想完就没了的念头</li>
+<li>一些深夜想出来的东西——关于理想、意义、应试，那些想了又想的念头</li>
 <li>偶然发现的联系——离散数学和数据结构是一回事，密码学和数论是一回事，哲学和形式系统也是一回事</li>
 </ul>
 <p>我不确定这些有没有用。但我学东西的时候最缺的不是教程，是一个人真实的学习过程——卡住的地方、想通的瞬间、走弯路之后回头看才明白的路线。如果这些记录能帮到同样在走的人，那就更好了。</p>
 <p>如果你在这里看到了有意思的东西，欢迎来聊。讨论、反驳、补充，都好。一个人的穷究有尽头，两个人的对话没有。</p>
-<p>密钥就在最显眼的地方。（tips: a-------）</p>
+<p>密钥就在最显眼的地方。</p>
 <p>联系方式：<a href="mailto:me@lighterever.com">me@lighterever.com</a></p>
+<hr>
+<h2>使用指南</h2>
+<h3>导航</h3>
+<table>
+<thead>
+<tr>
+<th>页面</th>
+<th>URL</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>首页</td>
+<td><code>/</code></td>
+<td>入口 + README 卡片</td>
+</tr>
+<tr>
+<td>密钥室</td>
+<td><code>/vault</code></td>
+<td>输入密钥解锁文章</td>
+</tr>
+<tr>
+<td>文章检索</td>
+<td><code>/articles</code></td>
+<td>按标签筛选、排序、搜索文章</td>
+</tr>
+<tr>
+<td>文章阅读</td>
+<td><code>/article/{slug}</code></td>
+<td>阅读全文，右侧 TOC、上下篇导航</td>
+</tr>
+<tr>
+<td>学习轨迹</td>
+<td><code>/timeline</code></td>
+<td>横向画布时间轴，记录学习过程</td>
+</tr>
+<tr>
+<td>来信</td>
+<td><code>/letters</code></td>
+<td>最近来信页面</td>
+</tr>
+</tbody></table>
+<h3>密钥室</h3>
+<p>密钥为 <code>aletheia</code>。输入后解锁文章检索页面，解锁状态保存在 <code>sessionStorage</code> 中，关闭标签页后需重新输入。底部 hint 链接可查看本页面。</p>
+<h3>文章检索</h3>
+<ul>
+<li>搜索框支持标题、标签、正文匹配（300ms 防抖）</li>
+<li>标签栏多选筛选，支持 OR / AND 逻辑切换</li>
+<li>列头 DATE / TITLE / TAGS 可点击排序，显示 ↑↓ 箭头</li>
+</ul>
+<h3>时间轴</h3>
+<p><code>/timeline</code> 页面以横向画布展示学习轨迹。支持：</p>
+<ul>
+<li><strong>平移</strong>：右键拖拽 / 触控板双指滑动</li>
+<li><strong>缩放</strong>：⌘+滚轮 (Mac) / Ctrl+滚轮 (Win)</li>
+<li><strong>节点</strong>：悬浮预览卡片、点击锁定展开/折叠</li>
+<li><strong>主题筛选</strong>：点击上方彩色主题条筛选</li>
+<li><strong>日期跳转</strong>：年/月/日下拉 + 跳转按钮</li>
+<li><strong>卡片关联</strong>：部分卡片可点击跳转到对应文章</li>
+</ul>
 
         </article>
 
