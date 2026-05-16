@@ -1,5 +1,7 @@
 /**
- * 文章阅读器
+ * ArticleReader — Full article reading experience (/article/{slug}).
+ * Markdown → DOM rendering (marked.js), TOC sidebar, reading progress bar,
+ * back navigation, keyboard shortcuts.
  */
 
 import { MarkdownRenderer } from '../core/markdown-renderer.js';

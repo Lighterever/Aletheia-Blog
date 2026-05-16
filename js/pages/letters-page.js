@@ -1,5 +1,6 @@
 /**
- * 来信信封页面
+ * LettersPage — Incoming letters/chronicles display (/letters).
+ * Date-range header, sorted letter list with metadata.
  */
 
 import { escapeHtml } from '../utils.js';

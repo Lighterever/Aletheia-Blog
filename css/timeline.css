@@ -1,3 +1,9 @@
+/**
+ * timeline.css — Timeline page (/timeline): interactive horizontal canvas,
+ * topic bars, timeline nodes, detail cards, search bar, zoom controls,
+ * locate button, tips overlay, theme toggle. Supports 4 zoom levels
+ * (overview → mini → card → full) with smooth density transitions.
+ */
 /* Extracted from style.css */
 
 /* ==================== 时间轴画布变量 ==================== */

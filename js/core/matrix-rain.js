@@ -1,5 +1,7 @@
 /**
- * 矩阵雨效果
+ * MatrixRain — Canvas-based digital rain animation.
+ * Green katakana characters falling in columns, used as the vault page
+ * background. Pauses when page is hidden, resizes with window.
  */
 
 export class MatrixRain {

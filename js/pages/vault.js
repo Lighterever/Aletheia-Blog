@@ -1,5 +1,7 @@
 /**
- * 密钥室
+ * Vault — Password authentication gate (/vault).
+ * AES decryption of article data, terminal-style input with Matrix Rain
+ * background, ripple unlock animation (Web Animation API), sessionStorage persistence.
  */
 
 import { MatrixRain } from '../core/matrix-rain.js';

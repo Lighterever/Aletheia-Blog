@@ -58,40 +58,54 @@ KaTeX 数学公式、highlight.js 语法高亮、marked.js GFM 渲染、代码�
 
 ```
 /
-├── index.html              ← SPA 入口（全部视图层）
+├── index.html              SPA 入口 — 所有视图在一个文件
+├── 404.html                密码学风格 404 页面（ASCII art + 扫描线效果）
+├── vercel.json             Vercel 部署配置（SPA rewrite 规则）
+├── sitemap.xml             自动生成的 XML 站点地图（构建时更新）
+├── robots.txt              SEO robots 指令
+├── favicon.svg             网站 favicon（ℵ 符号）
+├── about.md                /readme 独立页面的源 markdown
 │
-├── css/                    ← CSS 模块（7 文件）
-│   ├── base.css            ← CSS reset、变量、工具类
-│   ├── home.css            ← 主页 + Caesar 密码轮动画
-│   ├── vault.css           ← 密钥室 + Matrix Rain
-│   ├── articles.css        ← 文章检索 + 标签筛选
-│   ├── reader.css          ← 文章阅读 + TOC + 进度条
-│   ├── timeline.css        ← 时间轴画布（节点、主题条、卡片、控制栏）
-│   └── letters.css         ← 来信页面
+├── css/                    CSS 模块（7 文件，CSS 变量驱动）
+│   ├── base.css            Reset、CSS 自定义属性、排版、工具类
+│   ├── home.css            主页布局、hero、Caesar 密码轮动画
+│   ├── vault.css           密钥室、终端输入框、Matrix Rain、解锁特效
+│   ├── articles.css        文章检索、标签筛选、终端风格表格
+│   ├── reader.css          文章阅读、液态玻璃面板、TOC、进度条
+│   ├── timeline.css        时间轴画布、节点、主题条、卡片、控制栏
+│   └── letters.css         来信/手记页面布局
 │
-├── js/                     ← 前端逻辑（ES 模块）
-│   ├── app.js              ← 主控制器、路由、Crypto
-│   ├── utils.js            ← 共享工具函数
-│   ├── core/               ← 核心组件（5 文件）
-│   └── pages/              ← 页面控制器（4 文件）
+├── js/                     前端逻辑 — ES 模块，无需打包工具
+│   ├── app.js              主控制器、History API 路由、Crypto、页面调度
+│   ├── utils.js            共享工具函数（escapeHtml, formatDate, getAllTags）
+│   ├── core/               可复用核心组件
+│   │   ├── theme.js        深浅色主题切换（localStorage 持久化）
+│   │   ├── navbar.js       毛玻璃导航栏、滚动态隐藏/显示
+│   │   ├── typewriter.js   打字机文字动画（可调速）
+│   │   ├── matrix-rain.js  Canvas 数字雨特效（密钥室背景）
+│   │   └── markdown-renderer.js 静态管线：语法高亮、锚点、复制、表格
+│   └── pages/              路由页面控制器
+│       ├── timeline-canvas.js 交互式画布时间轴（800+ 行）
+│       ├── article-reader.js  Markdown → DOM 渲染器、TOC 侧栏、进度条
+│       ├── vault.js           AES 密钥验证、波纹解锁特效
+│       └── letters-page.js    来信/手记展示
 │
-├── articles/               ← 文章源文件（.md + YAML frontmatter）
-├── timeline/               ← 时间轴源文件（.md + YAML frontmatter）
+├── articles/               文章源文件 — .md + YAML frontmatter
+├── timeline/               时间轴源文件 — .md + YAML frontmatter + 日期条目
 │
-├── data/                   ← 构建产出
-│   ├── data.js             ← 加密文章数据
-│   └── timeline-data.js    ← 时间轴数据
+├── data/                   构建产出（自动生成，勿手动编辑）
+│   ├── data.js             加密文章数据 + 元数据
+│   └── timeline-data.js    时间轴画布解析数据
 │
-├── posts/                  ← 静态 HTML（SEO，自动生成）
+├── posts/                  静态 HTML 页面（SEO，构建时自动生成）
 │
-├── scripts/                ← 构建工具
-│   ├── build.js            ← 统一构建（文章 + 时间轴）
-│   └── serve.py            ← 开发服务器（SPA rewrite）
+├── scripts/                构建工具 & 开发服务器
+│   ├── build.js            统一构建：文章 → data.js + 时间轴 → timeline-data.js
+│   ├── serve.py            Python 开发服务器（SPA fallback, 端口 3000, 无缓存头）
+│   └── encrypt.js          AES-256-CBC 加密工具（独立脚本）
 │
-├── vercel.json             ← Vercel SPA rewrite 规则
-├── 404.html                ← 密码学风格 404 页面
-├── sitemap.xml             ← 自动更新的站点地图
-└── robots.txt              ← SEO robots
+├── package.json            Node.js 清单（marked.js 依赖, 构建脚本）
+└── package-lock.json       依赖锁文件
 ```
 
 ---

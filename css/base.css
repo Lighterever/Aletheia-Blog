@@ -1,3 +1,10 @@
+/**
+ * base.css — CSS reset, custom properties (design tokens), typography, layout utilities
+ * 
+ * Defines the design system: color palette, spacing scale, glass-morphism
+ * shadows, noise texture, fonts (Noto Serif SC / JetBrains Mono).
+ * Dark and light themes driven by CSS variables with [data-theme].
+ */
 /* Extracted from style.css */
 
 /**

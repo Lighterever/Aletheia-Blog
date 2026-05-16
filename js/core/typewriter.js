@@ -1,5 +1,7 @@
 /**
- * 打字机效果
+ * Typewriter — Text reveal animation.
+ * Characters appear one-by-one with configurable speed and pause between blocks.
+ * Supports DOM node arrays for multi-line / mixed-content typing.
  */
 
 export class Typewriter {

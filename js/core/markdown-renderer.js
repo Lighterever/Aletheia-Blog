@@ -1,5 +1,7 @@
 /**
- * Markdown 渲染器
+ * MarkdownRenderer — Static enhancement pipeline for rendered Markdown.
+ * Applies: syntax highlighting (highlight.js), heading anchor links,
+ * code block copy buttons, table scroll wrappers, KaTeX math rendering.
  */
 
 import { escapeHtml } from '../utils.js';

@@ -1,5 +1,7 @@
 /**
- * 主题切换
+ * Theme — Dark/light dual-theme switching.
+ * Persists selection in localStorage, toggles [data-theme] on <html>,
+ * swaps highlight.js and github-markdown-css theme stylesheets.
  */
 
 import { MarkdownRenderer } from './markdown-renderer.js';

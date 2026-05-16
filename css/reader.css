@@ -1,3 +1,7 @@
+/**
+ * reader.css — Article reader page (/article/{slug}): liquid-glass reading
+ * panel, KaTeX math, code blocks, TOC sidebar, reading progress bar.
+ */
 /* Extracted from style.css */
 
 /* ==================== 悬浮按钮 ==================== */

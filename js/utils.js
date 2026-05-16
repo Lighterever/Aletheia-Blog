@@ -1,5 +1,7 @@
 /**
- * 工具函数
+ * Shared utility functions.
+ * escapeHtml, formatDate, getAllTags — used across the app for
+ * DOM-safe string insertion and date/tag normalization.
  */
 
 export function escapeHtml(t) {

@@ -1,6 +1,9 @@
 /**
- * 时间轴画布 - 横向交互式时间线
- * Source: app.js TimelineCanvas class + repositionDOM
+ * TimelineCanvas — Interactive horizontal timeline (/timeline).
+ * Virtual coordinate canvas with pan (left-drag / touch), zoom (⌘+scroll / pinch),
+ * click-to-expand detail cards, topic bars with freeze-pane labels,
+ * node merging, ongoing indicators, topic filtering, date search,
+ * locate-to-today, expand/collapse all, keyboard navigation, tips overlay.
  */
 
 import { escapeHtml, formatDate } from '../utils.js';

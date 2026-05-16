@@ -1,6 +1,8 @@
 /**
- * 密钥博客 - 主入口
- * Source: app.js App class + Crypto + CONFIG
+ * App — Main controller & entry point for ℵ · aletheia.
+ * History API SPA router, page orchestration, vault gate protection,
+ * navigation event handling, keyboard shortcuts, article search & sort,
+ * timeline/letters page initialization.
  */
 
 import { escapeHtml, formatDate, getAllTags } from './utils.js';

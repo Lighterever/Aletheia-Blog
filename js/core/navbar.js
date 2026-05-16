@@ -1,5 +1,7 @@
 /**
- * 导航栏
+ * Navbar — Global navigation bar.
+ * Glass-morphism design, scroll-aware hide/show (slide-up on scroll down,
+ * reveal on scroll up), active page state, link click routing.
  */
 
 export class Navbar {
