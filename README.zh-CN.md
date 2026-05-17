@@ -105,9 +105,13 @@ KaTeX 数学公式、highlight.js 语法高亮、marked.js GFM 渲染、代码�
 ├── posts/                  静态 HTML 页面（SEO，构建时自动生成）
 │
 ├── scripts/                构建工具 & 开发服务器
-│   ├── build.js            统一构建：文章 → data.js + 时间轴 → timeline-data.js
-│   ├── serve.py            Python 开发服务器（SPA fallback, 端口 3000, 无缓存头）
-│   └── encrypt.js          AES-256-CBC 加密工具（独立脚本）
+│   ├── build.js            统一构建
+│   ├── editor-server.js    本地 Markdown 编辑器服务（端口 3333）
+│   ├── serve.py            Python 开发服务器（端口 3000）
+│   └── encrypt.js          AES 加密工具
+│
+├── editor/                 编辑器前端页面
+├── doc/                    文档（格式速查、渲染指南）
 │
 ├── package.json            Node.js 清单（marked.js 依赖, 构建脚本）
 └── package-lock.json       依赖锁文件
@@ -218,6 +222,25 @@ tags: 集合论
 ```bash
 node scripts/build.js
 ```
+
+### 🖊️ 本地 Markdown 编辑器
+
+项目内置编辑器，读者看不到，仅本地使用：
+
+```bash
+npm run editor
+```
+
+自动打开浏览器 → 左侧写 markdown / 右侧实时预览。格式工具栏一键插入，智能 Enter 列表延续，`Ctrl+S` 保存，点「构建」发布。
+
+> **为什么线上安全**：编辑器是 `node scripts/editor-server.js` 本地进程，Vercel 只跑 `npm run build` 生成静态文件，读者永远无法访问。
+
+### 支持的 Markdown 格式
+
+| 文档 | 说明 |
+|------|------|
+| [格式速查卡](doc/quick-reference.md) | 一屏速查 |
+| [渲染系统指南](doc/markdown-support.md) | 完整格式列表、管线架构、CSS 设计 |
 
 ---
 

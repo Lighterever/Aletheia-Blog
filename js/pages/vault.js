@@ -33,6 +33,7 @@ export class Vault {
                 this.animationToggleBtn.classList.add('active');
             } else {
                 this.animationToggleBtn.classList.remove('active');
+                this.fillPassword();
             }
             this.animationToggleBtn.addEventListener('click', () => this.toggleAnimation());
         }
@@ -43,6 +44,17 @@ export class Vault {
         localStorage.setItem('decryptionAnimationEnabled', this.decryptionAnimationEnabled);
         if (this.animationToggleBtn) {
             this.animationToggleBtn.classList.toggle('active', this.decryptionAnimationEnabled);
+        }
+        if (this.decryptionAnimationEnabled) {
+            if (this.keyInput) this.keyInput.value = '';
+        } else {
+            this.fillPassword();
+        }
+    }
+
+    fillPassword() {
+        if (this.keyInput && window.VAULT_KEY) {
+            this.keyInput.value = window.VAULT_KEY;
         }
     }
 
@@ -112,7 +124,12 @@ export class Vault {
     reset() {
         this.isDecrypting = false;
         if (this.submitBtn) this.submitBtn.disabled = false;
-        if (this.keyInput) this.keyInput.value = '';
+        if (this.keyInput) {
+            this.keyInput.value = '';
+            if (!this.decryptionAnimationEnabled) {
+                this.fillPassword();
+            }
+        }
         this.successAnim?.classList.remove('show');
         document.documentElement.style.setProperty('--reading-progress', '0%');
     }

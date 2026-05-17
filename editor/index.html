@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ℵ · Editor</title>
+<link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="/css/reader.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+:root { --bg-primary: #0a0a0f; }
+html, body { height: 100%; overflow: hidden; margin: 0; }
+body { font-family: var(--font-mono); background: var(--bg-primary); color: var(--text-primary); display: flex; flex-direction: column; }
+
+.editor-toolbar {
+    display: flex; align-items: center; gap: 2px; padding: 6px 10px;
+    background: rgba(var(--bg-primary-rgb), 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0; flex-wrap: wrap; z-index: 100;
+}
+.tb-group { display: flex; gap: 1px; }
+.tb-group + .tb-group { margin-left: 4px; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.08); }
+.tb-btn {
+    padding: 5px 8px; border: 1px solid transparent; background: transparent;
+    color: var(--text-secondary); cursor: pointer; border-radius: 4px;
+    font-family: var(--font-mono); font-size: 11px; white-space: nowrap;
+    transition: all 0.15s;
+}
+.tb-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-subtle); }
+.tb-btn b { color: var(--accent-primary); }
+.tb-btn em { color: var(--accent-tertiary); font-style: italic; }
+
+.editor-body { display: flex; flex: 1; overflow: hidden; }
+.editor-left { width: 50%; display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); }
+.editor-meta {
+    display: flex; gap: 8px; padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02); flex-shrink: 0;
+}
+.meta-field {
+    background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: 4px;
+    color: var(--text-primary); padding: 6px 8px; font-family: var(--font-mono); font-size: 12px;
+    outline: none;
+}
+.meta-field:focus { border-color: var(--accent-primary); }
+.meta-field::placeholder { color: var(--text-dim); }
+#metaTitle { min-width: 140px; flex: 1; }
+#metaDate, #metaTags { max-width: 100px; }
+#metaSlug { max-width: 80px; }
+
+.editor-textarea {
+    flex: 1; padding: 16px; background: var(--bg-primary); color: var(--text-primary);
+    border: none; outline: none; resize: none;
+    font-family: var(--font-mono); font-size: 14px; line-height: 1.8; tab-size: 4;
+}
+.editor-textarea::placeholder { color: var(--text-dim); }
+
+.editor-right { width: 50%; overflow-y: auto; padding: 0; background: var(--bg-primary); }
+.editor-right .article-reader { padding: 24px 36px 60px; max-width: 100%; margin: 0; }
+.editor-right .article-reader::before { display: none; }
+
+.editor-bottom {
+    display: flex; align-items: center; gap: 10px; padding: 6px 12px;
+    border-top: 1px solid var(--border-subtle); flex-shrink: 0;
+    background: rgba(var(--bg-primary-rgb), 0.9);
+    font-size: 12px; color: var(--text-muted);
+}
+.status { font-family: var(--font-mono); flex: 1; }
+.fb-btn {
+    padding: 4px 12px; border: 1px solid var(--border-accent); border-radius: 4px;
+    background: transparent; color: var(--accent-primary); cursor: pointer;
+    font-family: var(--font-mono); font-size: 11px; transition: all 0.15s;
+}
+.fb-btn:hover { background: rgba(var(--accent-primary-rgb), 0.1); }
+.fb-btn.save { background: var(--accent-primary); color: var(--bg-primary); border-color: var(--accent-primary); }
+.fb-btn.save:hover { opacity: 0.85; }
+.fb-btn.del { border-color: transparent; color: var(--text-dim); }
+.fb-btn.del:hover { color: var(--accent-error); border-color: rgba(var(--accent-error-rgb), 0.2); }
+.fb-btn.list-btn { border: 1px solid var(--border-subtle); color: var(--text-secondary); }
+
+.file-list-dropdown { position: relative; }
+.file-dropdown {
+    display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 4px;
+    background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 6px;
+    min-width: 280px; max-height: 320px; overflow-y: auto; z-index: 200;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+}
+.file-dropdown.show { display: block; }
+.file-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; cursor: pointer; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-secondary); transition: background 0.1s; gap: 8px;
+}
+.file-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+@media (max-width: 900px) {
+    .editor-body { flex-direction: column; }
+    .editor-left, .editor-right { width: 100%; height: 50%; }
+    .editor-left { border-right: none; border-bottom: 1px solid var(--border-subtle); }
+    .tb-btn { font-size: 10px; padding: 4px 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLBAR -->
+<div class="editor-toolbar">
+<div class="tb-group">
+<button class="tb-btn" title="粗体 Ctrl+B" onclick="wrap('**','**')"><b>B</b></button>
+<button class="tb-btn" title="斜体 Ctrl+I" onclick="wrap('*','*')"><em>I</em></button>
+<button class="tb-btn" title="删除线 Ctrl+D" onclick="wrap('~~','~~')"><s>S</s></button>
+<button class="tb-btn" title="行内代码" onclick="wrap('`','`')">&lt;/&gt;</button>
+<button class="tb-btn" title="高亮 ==" onclick="wrap('==','==')">H</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="H1" onclick="pre('# ')">H1</button>
+<button class="tb-btn" title="H2" onclick="pre('## ')">H2</button>
+<button class="tb-btn" title="H3" onclick="pre('### ')">H3</button>
+<button class="tb-btn" title="H4" onclick="pre('#### ')">H4</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="链接" onclick="wrap('[','](url)')">🔗</button>
+<button class="tb-btn" title="图片" onclick="wrap('![',']()')">🖼</button>
+<button class="tb-btn" title="引用块" onclick="pre('> ')">❝</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="无序列表" onclick="listPre('- ')">•</button>
+<button class="tb-btn" title="有序列表" onclick="listPre('1. ')">1.</button>
+<button class="tb-btn" title="任务列表" onclick="listPre('- [ ] ')">☐</button>
+<button class="tb-btn" title="表格" onclick="insertTable()">⊞</button>
+<button class="tb-btn" title="分割线" onclick="put('\n---\n')">—</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="代码块" onclick="wrapBlock('\n```\n','\n```\n')">```</button>
+<button class="tb-btn" title="脚注" onclick="insertFootnote()">¹</button>
+<button class="tb-btn" title="折叠面板" onclick="insertDetails()">▸</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="行内公式" onclick="wrap('$','$')">ƒ</button>
+<button class="tb-btn" title="块级公式" onclick="wrapBlock('\n$$\n','\n$$\n')">ƒƒ</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="NOTE" onclick="insertAlert('NOTE')" style="color:#539BF5">N</button>
+<button class="tb-btn" title="TIP" onclick="insertAlert('TIP')" style="color:#57AB5A">T</button>
+<button class="tb-btn" title="IMPORTANT" onclick="insertAlert('IMPORTANT')" style="color:#986EE2">!</button>
+<button class="tb-btn" title="WARNING" onclick="insertAlert('WARNING')" style="color:#C69026">⚠</button>
+<button class="tb-btn" title="CAUTION" onclick="insertAlert('CAUTION')" style="color:#E5534B">☠</button>
+</div>
+<div class="tb-group">
+<button class="tb-btn" title="下划线" onclick="wrap('<u>','</u>')">U</button>
+<button class="tb-btn" title="荧光笔" onclick="wrap('<ins>','</ins>')">⌇</button>
+<button class="tb-btn" title="下标 ~" onclick="wrap('~','~')">x₂</button>
+<button class="tb-btn" title="上标 ^" onclick="wrap('^','^')">x²</button>
+<button class="tb-btn" title="按键" onclick="wrap('<kbd>','</kbd>')">⌨</button>
+<button class="tb-btn" title="小字" onclick="wrap('<small>','</small>')">A</button>
+</div>
+</div>
+
+<!-- BODY -->
+<div class="editor-body">
+<div class="editor-left">
+<div class="editor-meta">
+<input class="meta-field" id="metaTitle" placeholder="标题">
+<input class="meta-field" id="metaDate" placeholder="日期">
+<input class="meta-field" id="metaTags" placeholder="标签,逗号分隔">
+<input class="meta-field" id="metaSlug" placeholder="文件名">
+</div>
+<textarea class="editor-textarea" id="ta" placeholder="在此编写 Markdown…" spellcheck="false"></textarea>
+</div>
+<div class="editor-right">
+<div class="article-reader"><article class="article-content markdown-body" id="preview"></article></div>
+</div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="editor-bottom">
+<span class="status" id="statusBar">✏️ 就绪 — Ctrl+S 保存</span>
+<span id="wordCount" style="font-family:var(--font-mono)"></span>
+<div class="file-list-dropdown">
+<button class="fb-btn list-btn" onclick="toggleFileList()">📂 文章列表 ▾</button>
+<div class="file-dropdown" id="fileDropdown"></div>
+</div>
+<button class="fb-btn" onclick="newArticle()">新建</button>
+<button class="fb-btn save" onclick="saveArticle()">💾 保存</button>
+<button class="fb-btn" onclick="buildSite()">🔨 构建</button>
+<button class="fb-btn del" id="btnDelete" onclick="deleteArticle()" style="display:none">删除</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-footnote@1.4.0/dist/index.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked-alert@2.1.2/dist/index.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script src="/js/utils/emojify.js"></script>
+<script src="/js/utils/md-preprocessor.js"></script>
+
+<script>
+// ── Init ──
+marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+if (window.markedFootnote) marked.use(window.markedFootnote());
+if (window.markedAlert) marked.use(window.markedAlert());
+
+var ta = document.getElementById('ta');
+var preview = document.getElementById('preview');
+var statusBar = document.getElementById('statusBar');
+var wordCountEl = document.getElementById('wordCount');
+var currentFile = null;
+
+// ── Render ──
+var rt;
+function schedule() { clearTimeout(rt); rt = setTimeout(render, 120); }
+function render() {
+    var w = ta.value;
+    if (typeof window.emojify === 'function') w = window.emojify(w);
+    if (typeof window.mdPreprocess !== 'undefined') w = window.mdPreprocess.preprocess(w);
+    var h = marked.parse(w);
+    if (typeof window.mdPreprocess !== 'undefined') h = window.mdPreprocess.restoreLatex(h);
+    preview.innerHTML = h;
+    try { hljs.highlightAll(); } catch(e){}
+    if (typeof renderMathInElement !== 'undefined') {
+        try { renderMathInElement(preview, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch(e){}
+    }
+    wordCountEl.textContent = ta.value.replace(/\s/g,'').length + ' 字';
+}
+ta.addEventListener('input', schedule);
+
+// ── Toolbar: basic ──
+function wrap(a, b) {
+    var s = ta.selectionStart, e = ta.selectionEnd, t = ta.value.substring(s, e);
+    ta.setRangeText(a + t + b, s, e, 'select'); ta.focus(); schedule();
+}
+function pre(p) {
+    var s = ta.selectionStart;
+    var ls = ta.value.lastIndexOf('\n', s - 1) + 1;
+    ta.setRangeText(p, ls, ls, 'end'); ta.focus(); schedule();
+}
+function put(t) {
+    var s = ta.selectionStart;
+    ta.setRangeText(t, s, s, 'end'); ta.focus(); schedule();
+}
+function wrapBlock(a, b) {
+    var s = ta.selectionStart, e = ta.selectionEnd, t = ta.value.substring(s, e);
+    ta.setRangeText(a + (t || '内容') + b, s, e, 'end'); ta.focus(); schedule();
+}
+function insertTable() { put('\n| 列A | 列B | 列C |\n| --- | --- | --- |\n|  |  |  |\n'); }
+function insertFootnote() {
+    wrap('[^', ']');
+    setTimeout(function() {
+        var label = 'fn' + Date.now().toString(36);
+        ta.value += '\n\n[^' + label + ']: '; ta.focus(); schedule();
+    }, 50);
+}
+function insertDetails() { wrapBlock('\n<details>\n<summary>点击展开</summary>\n\n', '\n\n</details>\n'); }
+function insertAlert(t) { wrapBlock('\n> [!' + t + ']\n> ', '\n'); }
+
+// ── Smart list: selected lines get proper prefix ──
+function listPre(prefix) {
+    var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
+    var ls = v.lastIndexOf('\n', s - 1) + 1;
+    var le = v.indexOf('\n', e);
+    if (le === -1) le = v.length;
+    var block = v.slice(ls, le);
+    var lines = block.split('\n');
+    var result;
+    if (prefix === '1. ') {
+        result = lines.map(function(l, i) { return (i + 1) + '. ' + l; }).join('\n');
+    } else {
+        result = lines.map(function(l) { return prefix + l; }).join('\n');
+    }
+    ta.setRangeText(result, ls, le, 'end'); ta.focus(); schedule();
+}
+
+// ── Smart Enter: auto-continue lists ──
+ta.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); saveArticle(); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'b') { e.preventDefault(); wrap('**','**'); return; }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'i') { e.preventDefault(); wrap('*','*'); return; }
+    if (e.key !== 'Enter' || e.shiftKey || e.metaKey || e.ctrlKey) return;
+
+    var v = ta.value, pos = ta.selectionStart;
+    var ls = v.lastIndexOf('\n', pos - 1) + 1;
+    var line = v.slice(ls, pos);
+    var after = v.slice(pos);
+
+    // Ordered: "N. text"
+    var m = line.match(/^(\d+)\.\s+(.*)/);
+    if (m) {
+        var num = parseInt(m[1]), content = m[2];
+        if (content.trim() === '') { e.preventDefault(); ta.setRangeText('', ls, (after[0]==='\n'?pos+1:pos), 'end'); schedule(); return; }
+        e.preventDefault(); ta.setRangeText('\n' + (num + 1) + '. ', pos, pos, 'end'); schedule(); return;
+    }
+    // Task: "- [ ]" or "- [x]"
+    m = line.match(/^-\s+\[([ x])\]\s+(.*)/);
+    if (m) {
+        if (m[2].trim() === '') { e.preventDefault(); ta.setRangeText('', ls, (after[0]==='\n'?pos+1:pos), 'end'); schedule(); return; }
+        e.preventDefault(); ta.setRangeText('\n- [ ] ', pos, pos, 'end'); schedule(); return;
+    }
+    // Unordered: "- text"
+    m = line.match(/^-\s+(.*)/);
+    if (m) {
+        if (m[1].trim() === '') { e.preventDefault(); ta.setRangeText('', ls, (after[0]==='\n'?pos+1:pos), 'end'); schedule(); return; }
+        e.preventDefault(); ta.setRangeText('\n- ', pos, pos, 'end'); schedule(); return;
+    }
+    // Blockquote: "> text"
+    m = line.match(/^>\s*(.*)/);
+    if (m) {
+        if (m[1].trim() === '') { e.preventDefault(); ta.setRangeText('', ls, (after[0]==='\n'?pos+1:pos), 'end'); schedule(); return; }
+        e.preventDefault(); ta.setRangeText('\n> ', pos, pos, 'end'); schedule(); return;
+    }
+});
+
+// ── File ops ──
+function saveArticle() {
+    var title = document.getElementById('metaTitle').value.trim();
+    var date = document.getElementById('metaDate').value.trim();
+    var tags = document.getElementById('metaTags').value.trim();
+    var slug = document.getElementById('metaSlug').value.trim();
+    var content = ta.value;
+
+    if (!content.startsWith('---')) {
+        var fm = '---\ntitle: ' + (title||'Untitled') + '\ndate: ' + (date||new Date().toISOString().slice(0,10)) + '\ntags: [' + (tags||'') + ']\ndescription: ' + (title||'') + '\n---\n\n';
+        content = fm + content;
+    } else {
+        var endIdx = content.indexOf('---', 3);
+        if (endIdx !== -1) {
+            var fmPart = content.slice(0, endIdx + 3);
+            if (title && fmPart.indexOf('title:')===-1) fmPart = fmPart.replace('---', '---\ntitle: ' + title);
+            if (date && fmPart.indexOf('date:')===-1) fmPart = fmPart.replace('---', '---\ndate: ' + date);
+            if (tags && fmPart.indexOf('tags:')===-1) fmPart = fmPart.replace('---', '---\ntags: [' + tags + ']');
+            content = fmPart + content.slice(endIdx + 3);
+        }
+    }
+    ta.value = content;
+
+    var file = slug || currentFile;
+    if (!file) { statusBar.textContent = '请填写文件名或从列表加载文章'; return; }
+    fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({file:file,content:content}) })
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(d.ok){ currentFile=d.file; document.getElementById('metaSlug').value=d.file; statusBar.textContent='✓ 已保存: '+d.file; refreshFileList(); }
+            else statusBar.textContent='保存失败';
+        })
+        .catch(function(){statusBar.textContent='网络错误'});
+}
+
+function loadArticle(file) {
+    fetch('/api/load?file=' + encodeURIComponent(file))
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(!d.content) return;
+            ta.value = d.content; currentFile = file;
+            document.getElementById('metaSlug').value = file;
+            document.getElementById('btnDelete').style.display = '';
+            if (d.content.startsWith('---')) {
+                var end = d.content.indexOf('---', 3);
+                if (end !== -1) {
+                    d.content.slice(3, end).trim().split('\n').forEach(function(line){
+                        var i = line.indexOf(':');
+                        if (i===-1) return;
+                        var k=line.slice(0,i).trim(), v=line.slice(i+1).trim();
+                        if (k==='title') document.getElementById('metaTitle').value=v;
+                        if (k==='date') document.getElementById('metaDate').value=v;
+                        if (k==='tags') document.getElementById('metaTags').value=v.replace(/[\[\]]/g,'');
+                    });
+                }
+            }
+            render(); toggleFileList();
+            statusBar.textContent = '已加载: ' + file;
+        })
+        .catch(function(){statusBar.textContent='加载失败'});
+}
+
+function newArticle() {
+    var d = new Date().toISOString().slice(0,10);
+    ta.value = '---\ntitle:\ndate: ' + d + '\ntags: []\ndescription:\n---\n\n';
+    currentFile = 'draft-' + d + '.md';
+    document.getElementById('metaTitle').value=''; document.getElementById('metaDate').value=d;
+    document.getElementById('metaTags').value=''; document.getElementById('metaSlug').value='';
+    document.getElementById('btnDelete').style.display='none';
+    render(); ta.focus(); statusBar.textContent='新建文章: ' + currentFile;
+}
+
+function deleteArticle() {
+    if (!currentFile || !confirm('确定删除 '+currentFile+'？')) return;
+    fetch('/api/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({file:currentFile}) })
+        .then(function(){ newArticle(); refreshFileList(); statusBar.textContent='已删除'; })
+        .catch(function(){statusBar.textContent='删除失败'});
+}
+
+function buildSite() {
+    statusBar.textContent='构建中…';
+    fetch('/api/build', { method:'POST' })
+        .then(function(r){return r.json()})
+        .then(function(d){ statusBar.textContent=d.ok?'✓ 构建完成':'✗ 构建失败'; console.log(d.output); })
+        .catch(function(){statusBar.textContent='构建错误'});
+}
+
+// ── File list ──
+function refreshFileList() {
+    fetch('/api/list')
+        .then(function(r){return r.json()})
+        .then(function(files){
+            var dd = document.getElementById('fileDropdown');
+            dd.innerHTML = files.map(function(f){ return '<div class="file-item" onclick="loadArticle(\''+f.file+'\')"><span class="fi-name">'+f.file+'</span><span style="color:var(--text-dim);font-size:10px">'+(f.date||'')+'</span></div>'; }).join('');
+            if(!files.length) dd.innerHTML='<div class="file-item" style="color:var(--text-dim)">暂无文章</div>';
+        });
+}
+function toggleFileList() {
+    var dd = document.getElementById('fileDropdown');
+    dd.classList.contains('show') ? dd.classList.remove('show') : (refreshFileList(), dd.classList.add('show'));
+}
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.file-list-dropdown')) document.getElementById('fileDropdown').classList.remove('show');
+});
+
+// ── Start ──
+refreshFileList();
+newArticle();
+</script>
+</body>
+</html>

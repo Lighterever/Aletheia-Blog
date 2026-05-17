@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
+const markedFootnote = require('marked-footnote');
+const markedAlert = require('marked-alert');
+const { emojify } = require('../js/utils/emojify.js');
+const mdPreprocess = require('../js/utils/md-preprocessor.js');
 
 const ARTICLES_DIR = path.join(__dirname, '..', 'articles');
 const DATA_DIR = path.join(__dirname, '..', 'data');
@@ -20,6 +24,8 @@ marked.setOptions({
     gfm: true,
     breaks: false,
 });
+marked.use(markedFootnote());
+marked.use(markedAlert());
 
 function parseFrontmatter(text) {
     const lines = text.split('\n');
@@ -252,7 +258,10 @@ function ensurePostsDir() {
 }
 
 function generateArticleHtml(article, baseUrl) {
-    const htmlContent = marked.parse(article.content);
+    const rawContent = emojify(article.content);
+    const preprocessed = mdPreprocess.preprocess(rawContent);
+    let htmlContent = marked.parse(preprocessed);
+    htmlContent = mdPreprocess.restoreLatex(htmlContent);
     const dateStr = article.date;
     const tagsStr = (article.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ');
     const articleUrl = `${baseUrl}/posts/${article.id}/`;
@@ -302,6 +311,7 @@ ${(article.tags || []).map(t => `    <meta property="article:tag" content="${esc
     <link rel="stylesheet" href="${baseUrl}/css/reader.css">
     <link rel="stylesheet" href="${baseUrl}/css/timeline.css">
     <link rel="stylesheet" href="${baseUrl}/css/letters.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -340,7 +350,7 @@ ${JSON.stringify(jsonLd, null, 4)}
     </nav>
 
     <main class="article-reader">
-        <article class="article-content">
+        <article class="article-content markdown-body">
             <h1>${escapeHtml(article.title)}</h1>
             <div class="article-meta">${dateStr}${tagsStr ? ' · ' + tagsStr : ''}</div>
             <hr class="article-divider">
@@ -355,6 +365,7 @@ ${JSON.stringify(jsonLd, null, 4)}
         </div>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
@@ -367,6 +378,8 @@ ${JSON.stringify(jsonLd, null, 4)}
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            try { hljs.highlightAll(); } catch (e) {}
+
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(document.body, {
                     delimiters: [
@@ -376,7 +389,66 @@ ${JSON.stringify(jsonLd, null, 4)}
                     throwOnError: false
                 });
             }
+
+            initFootnoteTooltip();
         });
+
+        function initFootnoteTooltip() {
+            var refs = document.querySelectorAll('sup a[data-footnote-ref]');
+            if (!refs.length) return;
+
+            var tooltip = document.createElement('div');
+            tooltip.className = 'footnote-tooltip';
+            tooltip.style.display = 'none';
+            document.body.appendChild(tooltip);
+
+            var hideTimeout;
+
+            refs.forEach(function(link) {
+                link.addEventListener('mouseenter', function(e) {
+                    clearTimeout(hideTimeout);
+                    var id = link.getAttribute('href');
+                    if (!id) return;
+                    var footnote = document.querySelector(id);
+                    if (!footnote) return;
+                    var content = footnote.cloneNode(true);
+                    var backrefs = content.querySelectorAll('[data-footnote-backref]');
+                    backrefs.forEach(function(b) { b.remove(); });
+                    var text = content.textContent.trim();
+                    if (text.length > 300) text = text.slice(0, 300) + '\u2026';
+                    tooltip.textContent = text;
+                    tooltip.style.display = 'block';
+                    positionTip(tooltip, link);
+                });
+
+                link.addEventListener('mouseleave', function() {
+                    hideTimeout = setTimeout(function() {
+                        tooltip.style.display = 'none';
+                    }, 200);
+                });
+            });
+
+            tooltip.addEventListener('mouseenter', function() { clearTimeout(hideTimeout); });
+            tooltip.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+
+            function positionTip(tip, anchor) {
+                var rect = anchor.getBoundingClientRect();
+                var tipH = tip.offsetHeight || 100;
+                var tipW = tip.offsetWidth || 280;
+                var left = rect.left + rect.width / 2 - tipW / 2;
+                if (left < 12) left = 12;
+                if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+                var top;
+                if (rect.top > tipH + 12) {
+                    top = rect.top - tipH - 12;
+                } else {
+                    top = rect.bottom + 12;
+                }
+                tip.style.left = left + 'px';
+                tip.style.top = top + 'px';
+                tip.style.bottom = 'auto';
+            }
+        }
     </script>
 </body>
 </html>`;

@@ -1,7 +1,8 @@
 /**
  * MarkdownRenderer — Static enhancement pipeline for rendered Markdown.
  * Applies: syntax highlighting (highlight.js), heading anchor links,
- * code block copy buttons, table scroll wrappers, KaTeX math rendering.
+ * code block copy buttons, table scroll wrappers, KaTeX math rendering,
+ * footnote hover tooltips.
  */
 
 import { escapeHtml } from '../utils.js';
@@ -9,12 +10,20 @@ import { escapeHtml } from '../utils.js';
 export class MarkdownRenderer {
     static init() {
         window.marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
+        if (window.markedFootnote) window.marked.use(window.markedFootnote());
+        if (window.markedAlert) window.marked.use(window.markedAlert());
     }
 
     static render(content, targetElement, title) {
         if (!targetElement) return;
 
-        let html = window.marked.parse(content);
+        let work = content;
+        if (typeof window.emojify === 'function') work = window.emojify(work);
+        if (typeof window.mdPreprocess !== 'undefined') work = window.mdPreprocess.preprocess(work);
+
+        let html = window.marked.parse(work);
+
+        if (typeof window.mdPreprocess !== 'undefined') html = window.mdPreprocess.restoreLatex(html);
 
         if (title && !/<h1[ >]/.test(html)) {
             html = `<h1>${escapeHtml(title)}</h1>` + html;
@@ -30,6 +39,68 @@ export class MarkdownRenderer {
         MarkdownRenderer.enhanceCodeBlocks(targetElement);
         MarkdownRenderer.addHeadingAnchors(targetElement);
         MarkdownRenderer.wrapTables(targetElement);
+        MarkdownRenderer.enhanceFootnotes(targetElement);
+    }
+
+    static enhanceFootnotes(container) {
+        const refs = container.querySelectorAll('sup a[data-footnote-ref]');
+        if (!refs.length) return;
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'footnote-tooltip';
+        tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+
+        let hideTimeout;
+
+        refs.forEach(function(link) {
+            link.addEventListener('mouseenter', function(e) {
+                clearTimeout(hideTimeout);
+                const id = link.getAttribute('href');
+                if (!id) return;
+                const footnote = container.querySelector(id);
+                if (!footnote) return;
+                const content = footnote.cloneNode(true);
+                const backrefs = content.querySelectorAll('[data-footnote-backref]');
+                backrefs.forEach(function(b) { b.remove(); });
+                let text = content.textContent.trim();
+                if (text.length > 300) text = text.slice(0, 300) + '…';
+                tooltip.textContent = text;
+                tooltip.style.display = 'block';
+                positionTooltip(tooltip, link);
+            });
+
+            link.addEventListener('mouseleave', function() {
+                hideTimeout = setTimeout(function() {
+                    tooltip.style.display = 'none';
+                }, 200);
+            });
+        });
+
+        tooltip.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimeout);
+        });
+        tooltip.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+
+        function positionTooltip(tip, anchor) {
+            var rect = anchor.getBoundingClientRect();
+            var tipH = tip.offsetHeight || 100;
+            var tipW = tip.offsetWidth || 280;
+            var left = rect.left + rect.width / 2 - tipW / 2;
+            if (left < 12) left = 12;
+            if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+            var top;
+            if (rect.top > tipH + 12) {
+                top = rect.top - tipH - 12;
+            } else {
+                top = rect.bottom + 12;
+            }
+            tip.style.left = left + 'px';
+            tip.style.top = top + 'px';
+            tip.style.bottom = 'auto';
+        }
     }
 
     static enhanceCodeBlocks(container) {

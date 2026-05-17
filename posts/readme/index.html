@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="https://www.lighterever.com/css/reader.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/timeline.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/letters.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -79,7 +80,7 @@
     </nav>
 
     <main class="article-reader">
-        <article class="article-content">
+        <article class="article-content markdown-body">
             <h1>README</h1>
             <div class="article-meta">2026-05-14</div>
             <hr class="article-divider">
@@ -143,6 +144,12 @@
 </tbody></table>
 <h3>密钥室</h3>
 <p>密钥为 <code>aletheia</code>。输入后解锁文章检索页面，解锁状态保存在 <code>sessionStorage</code> 中，关闭标签页后需重新输入。</p>
+<p>密钥室底部有一个 <strong>Decryption Progress</strong> 开关：</p>
+<ul>
+<li><strong>开启</strong>（默认）：需手动输入密码，提交后播放 Matrix 解密动画再进入文章列表</li>
+<li><strong>关闭</strong>：密码自动填入输入框，直接按 Enter 即可快速进入，跳过解密动画</li>
+</ul>
+<p>开关状态会保存在本地，刷新后保持上次的选择。</p>
 <h3>文章检索</h3>
 <ul>
 <li>搜索框支持标题、标签、正文匹配（<em>暂为不稳定功能</em>）</li>
@@ -159,7 +166,89 @@
 <li><strong>日期跳转</strong>：年/月/日下拉 + 跳转按钮</li>
 <li><strong>卡片关联</strong>：部分卡片可点击跳转到对应文章</li>
 </ul>
-<p><del>玩</del>看得开心^·^</p>
+<p><del>玩</del>看得开心<sup>·</sup></p>
+<hr>
+<h2>本地写作（编辑器）</h2>
+<p>项目内置了一个本地 Markdown 编辑器，读者无法访问。写文章只需一条命令：</p>
+<pre><code class="language-bash">npm run editor
+</code></pre>
+<p>自动打开浏览器进入编辑器页面（<code>http://localhost:3333</code>）。</p>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>左侧编辑</td>
+<td>纯文本输入，带格式工具栏</td>
+</tr>
+<tr>
+<td>右侧预览</td>
+<td>实时渲染，效果与线上完全一致</td>
+</tr>
+<tr>
+<td>格式工具栏</td>
+<td>7 组按钮，覆盖所有支持的 markdown 格式</td>
+</tr>
+<tr>
+<td>智能 Enter</td>
+<td>列表/引用行末回车自动延续前缀，有序列表自动递增</td>
+</tr>
+<tr>
+<td>框选编号</td>
+<td>框选多行点 <code>1.</code> 按钮 → 自动编号 1. 2. 3.</td>
+</tr>
+<tr>
+<td>字数统计</td>
+<td>右下角实时显示</td>
+</tr>
+<tr>
+<td>快捷键</td>
+<td><code>Ctrl+S</code> 保存、<code>Ctrl+B</code> 粗体、<code>Ctrl+I</code> 斜体</td>
+</tr>
+<tr>
+<td>元数据表单</td>
+<td>标题、日期、标签、文件名一键填写</td>
+</tr>
+<tr>
+<td>文章列表</td>
+<td>加载已有文章、新建、保存、删除</td>
+</tr>
+<tr>
+<td>构建按钮</td>
+<td>保存后点「构建」→ 生成静态 HTML</td>
+</tr>
+</tbody></table>
+<h3>如何发布上线？</h3>
+<ol>
+<li><code>npm run editor</code> → 写文章 → 保存</li>
+<li>点「构建」按钮（或运行 <code>npm run build</code>）</li>
+<li><code>git add articles/ posts/ data/</code> → <code>git commit</code> → <code>git push</code></li>
+<li>Vercel 自动部署</li>
+</ol>
+<h3>为什么线上看不到编辑器？</h3>
+<p>编辑器是一个本地 Node.js 服务（<code>scripts/editor-server.js</code>，端口 3333），只在你的电脑上运行。Vercel 部署时只执行 <code>npm run build</code> 生成静态文件，不会启动编辑器服务。读者永远无法访问到编辑器。</p>
+<hr>
+<h2>Markdown 格式支持</h2>
+<p>完整的格式支持说明和写作示例：</p>
+<table>
+<thead>
+<tr>
+<th>文档</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="doc/quick-reference.md">格式速查卡</a></td>
+<td>一屏看完所有格式</td>
+</tr>
+<tr>
+<td><a href="doc/markdown-support.md">渲染系统指南</a></td>
+<td>完整格式列表、渲染管线、CSS 设计系统</td>
+</tr>
+</tbody></table>
 
         </article>
 
@@ -171,6 +260,7 @@
         </div>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 
@@ -183,6 +273,8 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            try { hljs.highlightAll(); } catch (e) {}
+
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(document.body, {
                     delimiters: [
@@ -192,7 +284,58 @@
                     throwOnError: false
                 });
             }
+
+            initFootnoteTooltip();
         });
+
+        function initFootnoteTooltip() {
+            var refs = document.querySelectorAll('sup a[data-footnote-ref]');
+            if (!refs.length) return;
+
+            var tooltip = document.createElement('div');
+            tooltip.className = 'footnote-tooltip';
+            tooltip.style.display = 'none';
+            document.body.appendChild(tooltip);
+
+            var hideTimeout;
+
+            refs.forEach(function(link) {
+                link.addEventListener('mouseenter', function(e) {
+                    clearTimeout(hideTimeout);
+                    var id = link.getAttribute('href');
+                    if (!id) return;
+                    var footnote = document.querySelector(id);
+                    if (!footnote) return;
+                    var content = footnote.cloneNode(true);
+                    var backrefs = content.querySelectorAll('[data-footnote-backref]');
+                    backrefs.forEach(function(b) { b.remove(); });
+                    var text = content.textContent.trim();
+                    if (text.length > 300) text = text.slice(0, 300) + '…';
+                    tooltip.textContent = text;
+                    tooltip.style.display = 'block';
+                    positionTip(tooltip, link);
+                });
+
+                link.addEventListener('mouseleave', function() {
+                    hideTimeout = setTimeout(function() {
+                        tooltip.style.display = 'none';
+                    }, 200);
+                });
+            });
+
+            tooltip.addEventListener('mouseenter', function() { clearTimeout(hideTimeout); });
+            tooltip.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
+
+            function positionTip(tip, anchor) {
+                var rect = anchor.getBoundingClientRect();
+                var tipW = tip.offsetWidth || 280;
+                var left = rect.left + rect.width / 2 - tipW / 2;
+                if (left < 12) left = 12;
+                if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+                tip.style.left = left + 'px';
+                tip.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+            }
+        }
     </script>
 </body>
 </html>
