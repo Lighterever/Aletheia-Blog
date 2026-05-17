@@ -4,8 +4,7 @@
   "description": "ℵ · aletheia — thoughts, unfolded. 数学、计算机、哲学的探索",
   "private": true,
   "scripts": {
-    "build": "node scripts/build.js",
-    "build:vercel": "node scripts/build.js",
+    "build": "echo 'Using pre-built files'",
     "editor": "node scripts/editor-server.js"
   },
   "dependencies": {
