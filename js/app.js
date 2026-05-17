@@ -5,7 +5,7 @@
  * timeline/letters page initialization.
  */
 
-import { escapeHtml, formatDate, getAllTags } from './utils.js';
+import { escapeHtml, formatDate, getAllTags, decodeContent } from './utils.js';
 import { Theme } from './core/theme.js';
 import { Navbar } from './core/navbar.js';
 import { Typewriter } from './core/typewriter.js';
@@ -370,7 +370,7 @@ class App {
             filtered = filtered.filter(a => {
                 const titleMatch = (a.title || '').toLowerCase().includes(q);
                 const tagMatch = (a.tags || []).some(t => t.toLowerCase().includes(q));
-                const contentMatch = (a.content || '').toLowerCase().includes(q);
+                const contentMatch = decodeContent(a.content || '').toLowerCase().includes(q);
                 return titleMatch || tagMatch || contentMatch;
             });
         }

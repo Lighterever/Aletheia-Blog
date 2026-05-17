@@ -3,7 +3,7 @@
  * Date-range header, sorted letter list with metadata.
  */
 
-import { escapeHtml } from '../utils.js';
+import { escapeHtml, decodeContent } from '../utils.js';
 
 export class LettersPage {
     constructor(app) {
@@ -150,7 +150,9 @@ export class LettersPage {
     extractExcerpt(content, maxParagraphs = 3) {
         if (!content) return '<p>暂无内容</p>';
 
-        const text = content
+        const decoded = decodeContent(content);
+
+        const text = decoded
             .replace(/^#+\s+/gm, '')
             .replace(/\*\*(.+?)\*\*/g, '$1')
             .replace(/\*(.+?)\*/g, '$1')

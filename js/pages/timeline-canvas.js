@@ -6,7 +6,7 @@
  * locate-to-today, expand/collapse all, keyboard navigation, tips overlay.
  */
 
-import { escapeHtml, formatDate } from '../utils.js';
+import { escapeHtml, formatDate, decodeContent } from '../utils.js';
 
 class TimelineCanvas {
     constructor(containerId) {
@@ -352,7 +352,7 @@ class TimelineCanvas {
                 content.appendChild(topicLabel);
             }
 
-            var contentHtml = this.formatContent(g.entry.content);
+            var contentHtml = this.formatContent(decodeContent(g.entry.content));
              var entryDiv = document.createElement('div');
              entryDiv.className = 'card-entry';
              entryDiv.innerHTML = contentHtml;

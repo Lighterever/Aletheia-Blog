@@ -78,26 +78,22 @@ function escapeStringLiteral(str) {
     return str.replace(/[\\'"]/g, '\\$&');
 }
 
-function escapeTemplateLiteral(str) {
-    return str.replace(/[\\`]/g, '\\$&').replace(/\$\{/g, '\\${');
-}
-
 function generateDataJs(articles, aboutArticle) {
     const entries = articles.map((a) => {
-        const escapedContent = escapeTemplateLiteral(a.content);
+        const base64Content = Buffer.from(a.content, 'utf-8').toString('base64');
         const tagsStr = JSON.stringify(a.tags);
         return `    {
         id: '${escapeStringLiteral(a.id)}',
         title: '${escapeStringLiteral(a.title)}',
         date: '${escapeStringLiteral(a.date)}',
         tags: ${tagsStr},
-        content: \`${escapedContent}\`
+        content: '${base64Content}'
     }`;
     });
 
     var aboutJs = '';
     if (aboutArticle) {
-        var ac = escapeTemplateLiteral(aboutArticle.content);
+        var base64AboutContent = Buffer.from(aboutArticle.content, 'utf-8').toString('base64');
         var at = JSON.stringify(aboutArticle.tags);
         aboutJs = `
 window.aboutInfo = {
@@ -105,7 +101,7 @@ window.aboutInfo = {
     title: '${escapeStringLiteral(aboutArticle.title)}',
     date: '${escapeStringLiteral(aboutArticle.date)}',
     tags: ${at},
-    content: \`${ac}\`
+    content: '${base64AboutContent}'
 };`;
     }
 
@@ -208,11 +204,11 @@ function parseTimelineFile(filePath) {
 function generateTimelineJs(topics) {
     var topicEntries = topics.map(function(topic) {
         var entriesStr = topic.entries.map(function(e) {
-            var contentEscaped = escapeStringLiteral(e.content);
+            var base64EntryContent = Buffer.from(e.content, 'utf-8').toString('base64');
             var tagsArr = e.tags || [];
             var entryTagsStr = JSON.stringify(tagsArr);
             var linkStr = e.articleLink ? '"' + escapeStringLiteral(e.articleLink) + '"' : 'null';
-            return '{"date":"' + e.date + '","content":"' + contentEscaped + '","isInsight":' + e.isInsight + ',"tags":' + entryTagsStr + ',"articleLink":' + linkStr + '}';
+            return '{"date":"' + e.date + '","content":"' + base64EntryContent + '","isInsight":' + e.isInsight + ',"tags":' + entryTagsStr + ',"articleLink":' + linkStr + '}';
         }).join(',');
         var tagsStr = JSON.stringify(topic.tags);
         var endVal = topic.end ? "'" + escapeStringLiteral(topic.end) + "'" : 'null';

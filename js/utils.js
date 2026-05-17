@@ -23,3 +23,14 @@ export function getAllTags() {
     }
     return [...tagSet].sort();
 }
+
+export function decodeContent(str) {
+    if (!str) return '';
+    try {
+        const binary = atob(str);
+        const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+        return new TextDecoder().decode(bytes);
+    } catch {
+        return str;
+    }
+}

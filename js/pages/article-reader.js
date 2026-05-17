@@ -5,7 +5,7 @@
  */
 
 import { MarkdownRenderer } from '../core/markdown-renderer.js';
-import { escapeHtml, formatDate } from '../utils.js';
+import { escapeHtml, formatDate, decodeContent } from '../utils.js';
 
 export class ArticleReader {
     constructor() {
@@ -27,7 +27,7 @@ export class ArticleReader {
             `<span class="article-category">#${t}</span>`
         ).join('');
 
-        const stats = ArticleReader.countWords(article.content);
+        const stats = ArticleReader.countWords(decodeContent(article.content));
         const totalCount = stats.cn + stats.en;
         const readingTime = Math.max(1, Math.ceil(stats.cn / 400 + stats.en / 250));
         const countLabel = (stats.cn && stats.en)
@@ -47,7 +47,7 @@ export class ArticleReader {
             `;
         }
 
-        MarkdownRenderer.render(article.content, this.content, article.title);
+        MarkdownRenderer.render(decodeContent(article.content), this.content, article.title);
 
         this.setupArticle(article);
 
