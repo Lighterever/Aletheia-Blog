@@ -382,7 +382,6 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
 </nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/marked-footnote@1.4.0/dist/index.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked-alert@2.1.2/dist/index.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -393,7 +392,6 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
 <script>
 // ── Init ──
 marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
-if (window.markedFootnote) marked.use(window.markedFootnote());
 if (window.markedAlert) marked.use(window.markedAlert());
 
 var ta = document.getElementById('ta');
@@ -424,6 +422,7 @@ function render() {
     if (typeof window.mdPreprocess !== 'undefined') w = window.mdPreprocess.preprocess(w);
     var h = marked.parse(w);
     if (typeof window.mdPreprocess !== 'undefined') h = window.mdPreprocess.restoreLatex(h);
+    if (typeof window.mdPreprocess !== 'undefined' && window.mdPreprocess.restoreFootnotes) h = window.mdPreprocess.restoreFootnotes(h);
     preview.innerHTML = h;
     try { hljs.highlightAll(); } catch(e){}
     enhanceCodeBlocks(preview);
@@ -757,10 +756,15 @@ function insertFootnote() {
 
     var s = ta.selectionStart, e = ta.selectionEnd;
     var sel = ta.value.substring(s, e);
-    typeAt('[^' + nextN + ']', s, e);
+    ta.setRangeText('[^' + nextN + ']', s, e, 'end');
 
-    if (!ta.value.endsWith('\n')) typeAt('\n', ta.value.length);
-    typeAt('\n[^' + nextN + ']: ', ta.value.length);
+    if (!ta.value.endsWith('\n')) ta.setRangeText('\n', ta.value.length, ta.value.length, 'end');
+    ta.setRangeText('\n[^' + nextN + ']: ', ta.value.length, ta.value.length, 'end');
+
+    var defPos = ta.value.length;
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = defPos;
+    schedule();
 }
 function insertDetails() { wrapBlock('\n<details>\n<summary>点击展开</summary>\n\n', '\n\n</details>\n'); }
 function insertAlert(t) { wrapBlock('\n> [!' + t + ']\n> ', '\n'); }

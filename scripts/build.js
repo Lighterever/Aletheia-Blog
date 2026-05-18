@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const { marked } = require('marked');
-const markedFootnote = require('marked-footnote');
 const markedAlert = require('marked-alert');
 const { emojify } = require('../js/utils/emojify.js');
 const mdPreprocess = require('../js/utils/md-preprocessor.js');
@@ -26,7 +25,6 @@ marked.setOptions({
     headerIds: false,
     mangle: false,
 });
-marked.use(markedFootnote());
 marked.use(markedAlert());
 
 function parseFrontmatter(text) {
@@ -264,6 +262,7 @@ function generateArticleHtml(article, baseUrl) {
     const preprocessed = mdPreprocess.preprocess(rawContent);
     let htmlContent = marked.parse(preprocessed);
     htmlContent = mdPreprocess.restoreLatex(htmlContent);
+    htmlContent = mdPreprocess.restoreFootnotes(htmlContent);
     const dateStr = article.date;
     const tagsStr = (article.tags || []).map(t => `<span class="tag">#${escapeHtml(t)}</span>`).join(' ');
     const articleUrl = `${baseUrl}/posts/${article.id}/`;

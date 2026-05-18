@@ -10,7 +10,6 @@ import { escapeHtml } from '../utils.js';
 export class MarkdownRenderer {
     static init() {
         window.marked.setOptions({ gfm: true, breaks: true, headerIds: false, mangle: false });
-        if (window.markedFootnote) window.marked.use(window.markedFootnote());
         if (window.markedAlert) window.marked.use(window.markedAlert());
     }
 
@@ -24,6 +23,7 @@ export class MarkdownRenderer {
         let html = window.marked.parse(work);
 
         if (typeof window.mdPreprocess !== 'undefined') html = window.mdPreprocess.restoreLatex(html);
+        if (typeof window.mdPreprocess !== 'undefined' && window.mdPreprocess.restoreFootnotes) html = window.mdPreprocess.restoreFootnotes(html);
 
         if (title && !/<h1[ >]/.test(html)) {
             html = `<h1>${escapeHtml(title)}</h1>` + html;
