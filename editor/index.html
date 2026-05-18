@@ -26,15 +26,49 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
     flex-shrink: 0; flex-wrap: wrap; z-index: 100;
     overflow-x: auto;
 }
-.editor-logo {
-    display: flex; align-items: center; gap: 8px;
+.editor-logo { display: flex; align-items: center; gap: 8px;
     text-decoration: none; opacity: 0.8; padding: 8px 12px;
     border-right: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
-    transition: opacity 0.15s; align-self: center;
-}
+    transition: opacity 0.15s; align-self: center; }
 .editor-logo:hover { opacity: 1; }
 .editor-logo .logo-symbol { font-size: 22px; }
 .editor-logo .logo-badge { font-size: 10px; }
+
+.file-panel-btn { align-self: center; margin: 6px 8px; padding: 5px 12px !important; font-size: 12px !important; }
+
+.file-panel-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 350; }
+.file-panel-overlay.hidden { display: none; }
+.file-panel {
+    position: fixed; top: 40px; left: 50%; transform: translateX(-50%);
+    width: 420px; max-width: calc(100vw - 32px); max-height: calc(100vh - 80px);
+    background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 10px;
+    z-index: 351; display: flex; flex-direction: column;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.5);
+}
+.file-panel.hidden { display: none; }
+.fp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.fp-title { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.05em; }
+.fp-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; padding: 4px 8px; }
+.fp-close:hover { color: var(--text-primary); }
+.fp-search { padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.fp-search-input {
+    width: 100%; padding: 8px 12px; background: var(--bg-tertiary); border: 1px solid var(--border-subtle);
+    border-radius: 6px; color: var(--text-primary); font-family: var(--font-mono); font-size: 12px; outline: none;
+}
+.fp-search-input:focus { border-color: var(--accent-primary); }
+.fp-search-input::placeholder { color: var(--text-dim); }
+.fp-list { flex: 1; overflow-y: auto; padding: 6px 0; }
+.fp-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; cursor: pointer; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text-secondary); transition: background 0.1s; gap: 10px;
+}
+.fp-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.fp-item.active { color: var(--accent-primary); background: rgba(var(--accent-primary-rgb), 0.06); }
+.fp-item .fp-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp-item .fp-date { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+.fp-item .fp-tags { color: var(--text-dim); font-size: 10px; flex-shrink: 0; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fp-empty { padding: 32px 16px; text-align: center; color: var(--text-dim); font-family: var(--font-mono); font-size: 12px; }
 
 .tb-group {
     display: flex; flex-direction: column; gap: 3px;
@@ -109,7 +143,15 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
     background: rgba(var(--bg-primary-rgb), 0.9);
     font-size: 12px; color: var(--text-muted);
 }
-.status { font-family: var(--font-mono); flex: 1; }
+.status { font-family: var(--font-mono); flex: 1; display: flex; align-items: center; gap: 6px; }
+.status-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    background: transparent; transition: background 0.3s;
+}
+.status-dot.unsaved { background: var(--accent-warning); box-shadow: 0 0 6px rgba(var(--accent-warning-rgb), 0.5); }
+.status-dot.saving { background: var(--accent-secondary); animation: pulse-dot 0.6s ease-in-out infinite; }
+.status-dot.saved { background: var(--accent-primary); }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.3} }
 .fb-btn {
     padding: 4px 12px; border: 1px solid var(--border-accent); border-radius: 4px;
     background: transparent; color: var(--accent-primary); cursor: pointer;
@@ -122,21 +164,64 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
 .fb-btn.del:hover { color: var(--accent-error); border-color: rgba(var(--accent-error-rgb), 0.2); }
 .fb-btn.list-btn { border: 1px solid var(--border-subtle); color: var(--text-secondary); }
 
-.file-list-dropdown { position: relative; }
-.file-dropdown {
-    display: none; position: absolute; bottom: 100%; left: 0; margin-bottom: 4px;
-    background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 6px;
-    min-width: 280px; max-height: 320px; overflow-y: auto; z-index: 200;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+.export-dropdown { position: relative; }
+.export-btn { border-color: var(--accent-secondary) !important; color: var(--accent-secondary) !important; }
+.export-btn:hover { background: rgba(var(--accent-secondary-rgb), 0.1) !important; }
+.export-menu {
+    display: flex; flex-direction: column; position: absolute; bottom: calc(100% + 6px); right: 0;
+    background: var(--bg-card); border: 1px solid var(--border-accent); border-radius: 8px;
+    min-width: 300px; z-index: 250; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    padding: 6px; overflow: hidden;
 }
-.file-dropdown.show { display: block; }
-.file-item {
+.export-menu.hidden { display: none; }
+.export-item {
+    display: flex; flex-direction: column; padding: 10px 12px; cursor: pointer;
+    border-radius: 6px; transition: background 0.12s;
+}
+.export-item:hover { background: var(--bg-hover); }
+.ei-icon { font-size: 16px; margin-bottom: 2px; }
+.ei-label { font-family: var(--font-mono); font-size: 12px; color: var(--text-primary); font-weight: 500; }
+.ei-desc { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.export-sep { height: 1px; background: var(--border-subtle); margin: 4px 8px; }
+
+.toast {
+    position: fixed; bottom: 50px; left: 50%; transform: translateX(-50%);
+    background: var(--accent-primary); color: var(--bg-primary); font-family: var(--font-mono);
+    font-size: 12px; padding: 10px 20px; border-radius: 6px; z-index: 9999;
+    pointer-events: none; opacity: 0; transition: opacity 0.25s;
+    box-shadow: 0 4px 16px rgba(var(--accent-primary-rgb), 0.3);
+}
+.toast.show { opacity: 1; }
+.toast.error { background: var(--accent-error); color: #fff; }
+
+.editor-outline {
+    position: fixed; top: 0; right: 0; width: 260px; max-width: 80vw; height: 100vh;
+    background: var(--bg-secondary); border-left: 1px solid var(--border-subtle);
+    z-index: 300; overflow-y: auto; box-shadow: -4px 0 24px rgba(0,0,0,0.3);
+    display: flex; flex-direction: column;
+}
+.editor-outline.hidden { display: none; }
+.outline-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 12px; cursor: pointer; font-family: var(--font-mono); font-size: 12px;
-    color: var(--text-secondary); transition: background 0.1s; gap: 8px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); flex-shrink: 0;
 }
-.file-item:hover { background: var(--bg-hover); color: var(--text-primary); }
-.file-item .fi-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.outline-title { font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--text-primary); letter-spacing: 0.05em; }
+.outline-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 4px 8px; }
+.outline-close:hover { color: var(--text-primary); }
+.outline-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+.outline-item {
+    display: block; padding: 6px 16px; cursor: pointer; font-family: var(--font-mono);
+    font-size: 11px; color: var(--text-secondary); text-decoration: none;
+    border-left: 2px solid transparent; transition: all 0.15s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.outline-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+.outline-item.active { color: var(--accent-primary); border-left-color: var(--accent-primary); background: rgba(var(--accent-primary-rgb), 0.05); }
+.outline-h1 { padding-left: 16px; font-weight: 600; font-size: 12px; }
+.outline-h2 { padding-left: 28px; }
+.outline-h3 { padding-left: 40px; font-size: 10px; }
+.outline-h4 { padding-left: 52px; font-size: 10px; color: var(--text-dim); }
+.outline-empty { padding: 24px 16px; text-align: center; color: var(--text-dim); font-family: var(--font-mono); font-size: 11px; }
 
 @media (max-width: 900px) {
     .editor-body { flex-direction: column; }
@@ -156,6 +241,8 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
     <span class="logo-symbol">ℵ</span>
     <span class="logo-badge">Editor</span>
 </a>
+
+<button class="tb-btn file-panel-btn" onclick="toggleFilePanel()" title="文章列表">📂 文章</button>
 
 <div class="tb-group" data-label="文本样式"><div class="tb-row">
  <button class="tb-btn" title="粗体 Ctrl+B" onclick="wrap('**','**')"><b>B</b> 粗体</button>
@@ -229,17 +316,70 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
 
 <!-- BOTTOM BAR -->
 <div class="editor-bottom">
-<span class="status" id="statusBar">✏️ 就绪 — Ctrl+S 保存</span>
-<span id="wordCount" style="font-family:var(--font-mono)"></span>
-<div class="file-list-dropdown">
-<button class="fb-btn list-btn" onclick="toggleFileList()">📂 文章列表 ▾</button>
-<div class="file-dropdown" id="fileDropdown"></div>
-</div>
+<span class="status" id="statusBar">
+    <span class="status-dot" id="saveDot" title="未保存"></span>
+    <span id="statusText">✏️ 就绪 — Ctrl+S 保存</span>
+</span>
+<span class="editor-stats" id="editorStats" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim)"></span>
+<button class="fb-btn" id="outlineToggleBtn" onclick="toggleOutline()" title="目录">📑 目录</button>
 <button class="fb-btn" onclick="newArticle()">新建</button>
 <button class="fb-btn save" onclick="saveArticle()">💾 保存</button>
+<div class="export-dropdown">
+<button class="fb-btn export-btn" onclick="toggleExportMenu()">📤 导出 ▾</button>
+<div class="export-menu hidden" id="exportMenu">
+    <div class="export-item" onclick="exportWechatHTML()">
+        <span class="ei-icon">📋</span>
+        <span class="ei-label">复制为公众号 HTML</span>
+        <span class="ei-desc">inline 样式，直接粘贴到微信编辑器</span>
+    </div>
+    <div class="export-item" onclick="exportRichText()">
+        <span class="ei-icon">📝</span>
+        <span class="ei-label">复制富文本</span>
+        <span class="ei-desc">保留格式的 HTML，可粘贴到 Notion/飞书</span>
+    </div>
+    <div class="export-sep"></div>
+    <div class="export-item" onclick="exportMarkdown()">
+        <span class="ei-icon">📄</span>
+        <span class="ei-label">下载 Markdown</span>
+        <span class="ei-desc">原始 .md 文件</span>
+    </div>
+    <div class="export-item" onclick="exportHTML()">
+        <span class="ei-icon">🌐</span>
+        <span class="ei-label">下载 HTML</span>
+        <span class="ei-desc">带样式的独立 .html 文件</span>
+    </div>
+    <div class="export-item" onclick="exportPDF()">
+        <span class="ei-icon">🖨</span>
+        <span class="ei-label">导出 PDF</span>
+        <span class="ei-desc">通过浏览器打印</span>
+    </div>
+</div>
+</div>
 <button class="fb-btn" onclick="buildSite()">🔨 构建</button>
 <button class="fb-btn del" id="btnDelete" onclick="deleteArticle()" style="display:none">删除</button>
 </div>
+
+<!-- OUTLINE PANEL -->
+<nav class="editor-outline hidden" id="editorOutline">
+    <div class="outline-header">
+        <span class="outline-title">目录</span>
+        <button class="outline-close" onclick="toggleOutline()">✕</button>
+    </div>
+    <div class="outline-list" id="outlineList"></div>
+</nav>
+
+<!-- FILE PANEL -->
+<div class="file-panel-overlay hidden" id="filePanelOverlay" onclick="closeFilePanel()"></div>
+<nav class="file-panel hidden" id="filePanel">
+    <div class="fp-header">
+        <span class="fp-title">文章列表</span>
+        <button class="fp-close" onclick="closeFilePanel()">✕</button>
+    </div>
+    <div class="fp-search">
+        <input class="fp-search-input" id="fpSearchInput" placeholder="搜索文章…" oninput="filterFilePanel()">
+    </div>
+    <div class="fp-list" id="fpList"></div>
+</nav>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked-footnote@1.4.0/dist/index.umd.min.js"></script>
@@ -259,14 +399,27 @@ if (window.markedAlert) marked.use(window.markedAlert());
 var ta = document.getElementById('ta');
 var preview = document.getElementById('preview');
 var statusBar = document.getElementById('statusBar');
-var wordCountEl = document.getElementById('wordCount');
+var statusText = document.getElementById('statusText');
+var saveDot = document.getElementById('saveDot');
+var editorStats = document.getElementById('editorStats');
 var currentFile = null;
+var dirty = false;
+var lastSavedContent = '';
+var autoSaveTimer = null;
+var AUTOSAVE_DELAY = 2000;
 
 // ── Render ──
 var rt;
-function schedule() { clearTimeout(rt); rt = setTimeout(render, 120); }
+function schedule() { clearTimeout(rt); rt = setTimeout(render, 120); markDirty(); }
+function stripFrontmatter(text) {
+    if (text.trim().startsWith('---')) {
+        var endIdx = text.indexOf('---', 3);
+        if (endIdx !== -1) return text.slice(endIdx + 3).trim();
+    }
+    return text;
+}
 function render() {
-    var w = ta.value;
+    var w = stripFrontmatter(ta.value);
     if (typeof window.emojify === 'function') w = window.emojify(w);
     if (typeof window.mdPreprocess !== 'undefined') w = window.mdPreprocess.preprocess(w);
     var h = marked.parse(w);
@@ -280,7 +433,179 @@ function render() {
     if (typeof renderMathInElement !== 'undefined') {
         try { renderMathInElement(preview, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch(e){}
     }
-    wordCountEl.textContent = ta.value.replace(/\s/g,'').length + ' 字';
+    buildOutline();
+    updateStats();
+    scheduleAutoSave();
+}
+
+// ── Stats ──
+function updateStats() {
+    var text = ta.value;
+    var lines = text.split('\n').length;
+    var chars = text.replace(/\s/g, '').length;
+    var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    editorStats.textContent = lines + ' 行 · ' + chars + ' 字 · ' + words + ' 词';
+}
+
+// ── Dirty & Auto-save ──
+function markDirty() {
+    if (ta.value !== lastSavedContent && !dirty) {
+        dirty = true;
+        saveDot.className = 'status-dot unsaved';
+    }
+}
+
+function scheduleAutoSave() {
+    clearTimeout(autoSaveTimer);
+    if (!currentFile || !dirty) return;
+    autoSaveTimer = setTimeout(doAutoSave, AUTOSAVE_DELAY);
+}
+
+function doAutoSave() {
+    if (!currentFile || !dirty) return;
+    saveDot.className = 'status-dot saving';
+    statusText.textContent = '自动保存中…';
+    var content = buildContent();
+    fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({file:currentFile,content:content}) })
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(d.ok){
+                ta.value = content;
+                lastSavedContent = content;
+                dirty = false;
+                saveDot.className = 'status-dot saved';
+                statusText.textContent = '✓ 已自动保存: ' + d.file + ' (' + new Date().toLocaleTimeString('zh-CN', { hour12: false }) + ')';
+                setTimeout(function(){ if(!dirty) saveDot.className = 'status-dot'; }, 3000);
+            } else {
+                saveDot.className = 'status-dot unsaved';
+                statusText.textContent = '自动保存失败';
+            }
+        })
+        .catch(function(){
+            saveDot.className = 'status-dot unsaved';
+            statusText.textContent = '自动保存网络错误';
+        });
+}
+
+// ── Outline ──
+function buildOutline() {
+    var list = document.getElementById('outlineList');
+    var headings = preview.querySelectorAll('h1, h2, h3, h4');
+    if (!headings.length) {
+        list.innerHTML = '<div class="outline-empty">暂无标题</div>';
+        return;
+    }
+    var html = '';
+    headings.forEach(function(h, i) {
+        var id = 'outline-' + i;
+        h.id = id;
+        var tag = h.tagName.toLowerCase();
+        var text = h.textContent.replace(/\u00A7/g, '').trim().substring(0, 60);
+        html += '<div class="outline-item outline-' + tag + '" data-target="' + id + '" onclick="scrollToHeading(\'' + id + '\')">' + escapeHtml(text) + '</div>';
+    });
+    list.innerHTML = html;
+}
+
+function scrollToHeading(id) {
+    var target = document.getElementById(id);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleOutline() {
+    var panel = document.getElementById('editorOutline');
+    panel.classList.toggle('hidden');
+}
+
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ── Scroll sync: proportional (text ↔ preview, rAF batching) ──
+var previewPane = document.querySelector('.editor-right');
+var _syncIgnore = false;
+var _syncPending = false;
+
+function getFrontmatterPixelHeight() {
+    var text = ta.value;
+    if (!text.trim().startsWith('---')) return 0;
+    var endIdx = text.indexOf('---', 3);
+    if (endIdx === -1) return 0;
+    var lines = text.slice(0, endIdx + 3).split('\n').length;
+    return lines * parseFloat(getComputedStyle(ta).lineHeight) || (lines * 14 * 1.8);
+}
+
+function syncFromTextarea() {
+    var fmPx = getFrontmatterPixelHeight();
+    var taMax = ta.scrollHeight - ta.clientHeight;
+    var contentMax = taMax - fmPx;
+    if (contentMax <= 0) { previewPane.scrollTop = 0; return; }
+
+    var contentScroll = ta.scrollTop - fmPx;
+    if (contentScroll < 0) contentScroll = 0;
+    if (contentScroll > contentMax) contentScroll = contentMax;
+
+    var ratio = contentScroll / contentMax;
+    var previewMax = previewPane.scrollHeight - previewPane.clientHeight;
+
+    _syncIgnore = true;
+    previewPane.scrollTop = Math.round(ratio * previewMax);
+    requestAnimationFrame(function() { _syncIgnore = false; });
+}
+
+function syncFromPreview() {
+    var previewMax = previewPane.scrollHeight - previewPane.clientHeight;
+    if (previewMax <= 0) { ta.scrollTop = 0; return; }
+    var ratio = previewPane.scrollTop / previewMax;
+    if (ratio < 0) ratio = 0; if (ratio > 1) ratio = 1;
+
+    var fmPx = getFrontmatterPixelHeight();
+    var taMax = ta.scrollHeight - ta.clientHeight;
+    var contentMax = taMax - fmPx;
+    if (contentMax <= 0) { ta.scrollTop = 0; return; }
+
+    _syncIgnore = true;
+    ta.scrollTop = Math.round(fmPx + ratio * contentMax);
+    requestAnimationFrame(function() { _syncIgnore = false; });
+}
+
+function onTextareaScroll() {
+    if (_syncIgnore || _syncPending) return;
+    _syncPending = true;
+    requestAnimationFrame(function() {
+        _syncPending = false;
+        syncFromTextarea();
+        highlightOutline();
+    });
+}
+
+function onPreviewScroll() {
+    if (_syncIgnore || _syncPending) return;
+    _syncPending = true;
+    requestAnimationFrame(function() {
+        _syncPending = false;
+        syncFromPreview();
+        highlightOutline();
+    });
+}
+
+ta.addEventListener('scroll', onTextareaScroll, { passive: true });
+previewPane.addEventListener('scroll', onPreviewScroll, { passive: true });
+
+function highlightOutline() {
+    var items = document.querySelectorAll('.outline-item');
+    if (!items.length) return;
+    var activeId = null;
+    var containerTop = previewPane.scrollTop + 40;
+    items.forEach(function(item) {
+        var h = document.getElementById(item.dataset.target);
+        if (!h) return;
+        if (h.offsetTop <= containerTop) activeId = item.dataset.target;
+    });
+    items.forEach(function(item) {
+        item.classList.toggle('active', item.dataset.target === activeId);
+    });
 }
 
 // ── DOM Enhancements ──
@@ -389,34 +714,96 @@ function enhanceFootnotes(container) {
 }
 ta.addEventListener('input', schedule);
 
-// ── Toolbar: basic ──
+// ── Toolbar: basic (all use execCommand for native undo support) ──
+function typeAt(text, pos, endPos) {
+    ta.focus();
+    ta.selectionStart = pos; ta.selectionEnd = endPos || pos;
+    document.execCommand('insertText', false, text);
+    schedule();
+}
 function wrap(a, b) {
     var s = ta.selectionStart, e = ta.selectionEnd, t = ta.value.substring(s, e);
-    ta.setRangeText(a + t + b, s, e, 'select'); ta.focus(); schedule();
+    if (t) { typeAt(a + t + b, s, e); }
+    else {
+        typeAt(a + b, s, e);
+        var mid = s + a.length;
+        ta.selectionStart = ta.selectionEnd = mid;
+    }
 }
 function pre(p) {
     var s = ta.selectionStart;
     var ls = ta.value.lastIndexOf('\n', s - 1) + 1;
-    ta.setRangeText(p, ls, ls, 'end'); ta.focus(); schedule();
+    typeAt(p, ls);
 }
 function put(t) {
     var s = ta.selectionStart;
-    ta.setRangeText(t, s, s, 'end'); ta.focus(); schedule();
+    typeAt(t, s);
 }
 function wrapBlock(a, b) {
     var s = ta.selectionStart, e = ta.selectionEnd, t = ta.value.substring(s, e);
-    ta.setRangeText(a + (t || '内容') + b, s, e, 'end'); ta.focus(); schedule();
+    typeAt(a + (t || '内容') + b, s, e);
 }
 function insertTable() { put('\n| 列A | 列B | 列C |\n| --- | --- | --- |\n|  |  |  |\n'); }
 function insertFootnote() {
-    wrap('[^', ']');
-    setTimeout(function() {
-        var label = 'fn' + Date.now().toString(36);
-        ta.value += '\n\n[^' + label + ']: '; ta.focus(); schedule();
-    }, 50);
+    var text = ta.value;
+    var refPattern = /\[(\^(\d+))\]/g;
+    var maxN = 0;
+    var match;
+    while ((match = refPattern.exec(text)) !== null) {
+        var n = parseInt(match[2], 10);
+        if (n > maxN) maxN = n;
+    }
+    var nextN = maxN + 1;
+
+    var s = ta.selectionStart, e = ta.selectionEnd;
+    var sel = ta.value.substring(s, e);
+    typeAt('[^' + nextN + ']', s, e);
+
+    if (!ta.value.endsWith('\n')) typeAt('\n', ta.value.length);
+    typeAt('\n[^' + nextN + ']: ', ta.value.length);
 }
 function insertDetails() { wrapBlock('\n<details>\n<summary>点击展开</summary>\n\n', '\n\n</details>\n'); }
 function insertAlert(t) { wrapBlock('\n> [!' + t + ']\n> ', '\n'); }
+
+function cleanupFootnotes() {
+    var text = ta.value;
+    var m = text.match(/\n\n\[(\^\d+)\]: /);
+    if (!m) return;
+    var defStart = text.indexOf(m[0]);
+    var body = text.slice(0, defStart);
+    var defs = text.slice(defStart);
+
+    var active = {};
+    var r;
+    var re = /\[(\^(\d+))\]/g;
+    while ((r = re.exec(body)) !== null) active[r[1]] = true;
+
+    var lines = defs.split('\n');
+    var out = [];
+    var i = 0;
+    while (i < lines.length) {
+        if (lines[i].trim() === '') { out.push(''); i++; continue; }
+        var dm = lines[i].match(/^\[(\^\d+)\]:\s?(.*)/);
+        if (dm && active[dm[1]]) {
+            out.push(lines[i]);
+            i++;
+        } else if (dm && !active[dm[1]]) {
+            i++;
+            while (i < lines.length && lines[i].trim() !== '' && !/^\[\^\d+\]:/.test(lines[i])) i++;
+        } else {
+            out.push(lines[i]);
+            i++;
+        }
+    }
+
+    var cleaned = out.join('\n').replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
+    if (cleaned !== defs.replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n')) {
+        var cursor = ta.selectionStart;
+        ta.value = body + '\n\n' + cleaned;
+        if (cursor > ta.value.length) cursor = ta.value.length;
+        ta.selectionStart = ta.selectionEnd = cursor;
+    }
+}
 
 // ── Smart list: selected lines get proper prefix ──
 function listPre(prefix) {
@@ -425,6 +812,7 @@ function listPre(prefix) {
     var le = v.indexOf('\n', e);
     if (le === -1) le = v.length;
     var block = v.slice(ls, le);
+    if (!block.trim()) { typeAt(prefix, ls); return; }
     var lines = block.split('\n');
     var result;
     if (prefix === '1. ') {
@@ -432,7 +820,7 @@ function listPre(prefix) {
     } else {
         result = lines.map(function(l) { return prefix + l; }).join('\n');
     }
-    ta.setRangeText(result, ls, le, 'end'); ta.focus(); schedule();
+    typeAt(result, ls, le);
 }
 
 // ── Smart Enter: auto-continue lists ──
@@ -475,11 +863,11 @@ ta.addEventListener('keydown', function(e) {
 });
 
 // ── File ops ──
-function saveArticle() {
+function buildContent() {
+    cleanupFootnotes();
     var title = document.getElementById('metaTitle').value.trim();
     var date = document.getElementById('metaDate').value.trim();
     var tags = document.getElementById('metaTags').value.trim();
-    var slug = document.getElementById('metaSlug').value.trim();
     var content = ta.value;
 
     if (!content.startsWith('---')) {
@@ -495,17 +883,39 @@ function saveArticle() {
             content = fmPart + content.slice(endIdx + 3);
         }
     }
-    ta.value = content;
+    return content;
+}
 
+function saveArticle() {
+    var slug = document.getElementById('metaSlug').value.trim();
     var file = slug || currentFile;
-    if (!file) { statusBar.textContent = '请填写文件名或从列表加载文章'; return; }
+    if (!file) { statusText.textContent = '请填写文件名或从列表加载文章'; return; }
+    var content = buildContent();
+    saveDot.className = 'status-dot saving';
+    statusText.textContent = '保存中…';
     fetch('/api/save', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({file:file,content:content}) })
         .then(function(r){return r.json()})
         .then(function(d){
-            if(d.ok){ currentFile=d.file; document.getElementById('metaSlug').value=d.file; statusBar.textContent='✓ 已保存: '+d.file; refreshFileList(); }
-            else statusBar.textContent='保存失败';
+            if(d.ok){
+                ta.value = content;
+                currentFile = d.file;
+                lastSavedContent = content;
+                dirty = false;
+                document.getElementById('metaSlug').value = d.file;
+                saveDot.className = 'status-dot saved';
+                statusText.textContent = '✓ 已保存: ' + d.file + ' (' + new Date().toLocaleTimeString('zh-CN', { hour12: false }) + ')';
+                refreshFileList();
+                render();
+                setTimeout(function(){ if(!dirty) saveDot.className = 'status-dot'; }, 3000);
+            } else {
+                saveDot.className = 'status-dot unsaved';
+                statusText.textContent = '保存失败';
+            }
         })
-        .catch(function(){statusBar.textContent='网络错误'});
+        .catch(function(){
+            saveDot.className = 'status-dot unsaved';
+            statusText.textContent = '网络错误';
+        });
 }
 
 function loadArticle(file) {
@@ -514,8 +924,10 @@ function loadArticle(file) {
         .then(function(d){
             if(!d.content) return;
             ta.value = d.content; currentFile = file;
+            lastSavedContent = d.content; dirty = false;
             document.getElementById('metaSlug').value = file;
             document.getElementById('btnDelete').style.display = '';
+            saveDot.className = 'status-dot';
             if (d.content.startsWith('---')) {
                 var end = d.content.indexOf('---', 3);
                 if (end !== -1) {
@@ -529,53 +941,298 @@ function loadArticle(file) {
                     });
                 }
             }
-            render(); toggleFileList();
-            statusBar.textContent = '已加载: ' + file;
+            render(); closeFilePanel();
+            statusText.textContent = '已加载: ' + file;
         })
-        .catch(function(){statusBar.textContent='加载失败'});
+        .catch(function(){statusText.textContent='加载失败'});
 }
 
 function newArticle() {
+    clearTimeout(autoSaveTimer);
     var d = new Date().toISOString().slice(0,10);
     ta.value = '---\ntitle:\ndate: ' + d + '\ntags: []\ndescription:\n---\n\n';
     currentFile = 'draft-' + d + '.md';
+    lastSavedContent = ta.value; dirty = false;
     document.getElementById('metaTitle').value=''; document.getElementById('metaDate').value=d;
     document.getElementById('metaTags').value=''; document.getElementById('metaSlug').value='';
     document.getElementById('btnDelete').style.display='none';
-    render(); ta.focus(); statusBar.textContent='新建文章: ' + currentFile;
+    saveDot.className = 'status-dot unsaved';
+    render(); ta.focus(); statusText.textContent='新建文章: ' + currentFile + ' (草稿)';
 }
 
 function deleteArticle() {
     if (!currentFile || !confirm('确定删除 '+currentFile+'？')) return;
     fetch('/api/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({file:currentFile}) })
-        .then(function(){ newArticle(); refreshFileList(); statusBar.textContent='已删除'; })
-        .catch(function(){statusBar.textContent='删除失败'});
+        .then(function(){ newArticle(); refreshFileList(); statusText.textContent='已删除'; })
+        .catch(function(){statusText.textContent='删除失败'});
 }
 
 function buildSite() {
-    statusBar.textContent='构建中…';
+    statusText.textContent='构建中…';
     fetch('/api/build', { method:'POST' })
         .then(function(r){return r.json()})
-        .then(function(d){ statusBar.textContent=d.ok?'✓ 构建完成':'✗ 构建失败'; console.log(d.output); })
-        .catch(function(){statusBar.textContent='构建错误'});
+        .then(function(d){ statusText.textContent=d.ok?'✓ 构建完成':'✗ 构建失败'; console.log(d.output); })
+        .catch(function(){statusText.textContent='构建错误'});
 }
 
-// ── File list ──
+// ── Export ──
+var toastEl;
+function toast(msg, isError) {
+    if (!toastEl) {
+        toastEl = document.createElement('div');
+        toastEl.className = 'toast';
+        document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = msg;
+    toastEl.className = 'toast' + (isError ? ' error' : '') + ' show';
+    clearTimeout(toastEl._tid);
+    toastEl._tid = setTimeout(function() { toastEl.classList.remove('show'); }, 2000);
+}
+
+function toggleExportMenu() {
+    var menu = document.getElementById('exportMenu');
+    menu.classList.toggle('hidden');
+}
+
+function getArticleMeta() {
+    var title = document.getElementById('metaTitle').value.trim() || 'Untitled';
+    var date = document.getElementById('metaDate').value.trim() || '';
+    var tags = document.getElementById('metaTags').value.trim();
+    return { title: title, date: date, tags: tags };
+}
+
+var WECHAT_STYLES = {
+    body: 'margin:0;padding:0;max-width:100%;word-wrap:break-word;',
+    container: 'padding:0 12px;',
+    h1: 'font-size:22px;font-weight:700;color:#333;line-height:1.4;margin:20px 0 12px;',
+    h2: 'font-size:20px;font-weight:600;color:#333;line-height:1.4;margin:18px 0 10px;padding-bottom:6px;border-bottom:1px solid #eee;',
+    h3: 'font-size:18px;font-weight:600;color:#333;line-height:1.5;margin:16px 0 8px;',
+    h4: 'font-size:17px;font-weight:600;color:#555;line-height:1.5;margin:14px 0 6px;',
+    p: 'font-size:15px;color:#3f3f3f;line-height:1.75;letter-spacing:0.5px;margin:0 0 12px;text-align:justify;',
+    code: 'font-size:14px;font-family:Menlo,Monaco,Consolas,\"Courier New\",monospace;background:#f0f0f0;padding:2px 6px;border-radius:3px;color:#c7254e;',
+    pre: 'background:#282c34;color:#abb2bf;padding:16px;border-radius:6px;overflow-x:auto;font-size:13px;line-height:1.6;margin:12px 0;font-family:Menlo,Monaco,Consolas,monospace;',
+    blockquote: 'border-left:4px solid #1890ff;background:#f6f9fc;padding:12px 16px;margin:12px 0;color:#555;font-size:14px;line-height:1.7;',
+    ul: 'padding-left:24px;margin:10px 0;',
+    ol: 'padding-left:24px;margin:10px 0;',
+    li: 'font-size:15px;color:#3f3f3f;line-height:1.75;margin-bottom:4px;',
+    table: 'border-collapse:collapse;width:100%;margin:12px 0;font-size:14px;',
+    th: 'background:#f5f7fa;padding:10px 14px;text-align:left;font-weight:600;border:1px solid #e8e8e8;color:#333;',
+    td: 'padding:10px 14px;border:1px solid #e8e8e8;color:#3f3f3f;',
+    img: 'max-width:100%;height:auto;display:block;margin:12px auto;border-radius:4px;',
+    strong: 'color:#222;font-weight:700;',
+    a: 'color:#576b95;text-decoration:none;',
+    hr: 'border:none;border-top:1px dashed #e0e0e0;margin:20px 0;',
+    mark: 'background:#fff3cd;padding:1px 4px;border-radius:2px;',
+    figcaption: 'font-size:13px;color:#999;text-align:center;margin-top:6px;',
+    kbd: 'font-size:13px;background:#f5f5f5;border:1px solid #d0d0d0;border-radius:3px;padding:1px 5px;'
+};
+
+function buildWechatHTML(contentOnly) {
+    var rawContent = stripFrontmatter(ta.value);
+    var html = marked.parse(rawContent);
+    if (typeof window.mdPreprocess !== 'undefined') html = window.mdPreprocess.restoreLatex(html);
+
+    var div = document.createElement('div');
+    div.innerHTML = html;
+
+    // Rewrite tags with inline wechat styles
+    function apply(el, styleKey) { if (WECHAT_STYLES[styleKey]) el.setAttribute('style', WECHAT_STYLES[styleKey]); }
+    function applyToAll(sel, key) { var els = div.querySelectorAll(sel); for (var i = 0; i < els.length; i++) els[i].setAttribute('style', WECHAT_STYLES[key]); }
+
+    applyToAll('h1', 'h1'); applyToAll('h2', 'h2'); applyToAll('h3', 'h3'); applyToAll('h4', 'h4');
+    applyToAll('p', 'p'); applyToAll('code', 'code'); applyToAll('pre', 'pre');
+    applyToAll('blockquote', 'blockquote'); applyToAll('ul', 'ul'); applyToAll('ol', 'ol');
+    applyToAll('li', 'li'); applyToAll('table', 'table'); applyToAll('th', 'th'); applyToAll('td', 'td');
+    applyToAll('img', 'img'); applyToAll('strong', 'strong'); applyToAll('a', 'a');
+    applyToAll('hr', 'hr'); applyToAll('mark', 'mark'); applyToAll('kbd', 'kbd');
+
+    // Handle code blocks: put pre>code content directly
+    var pres = div.querySelectorAll('pre');
+    for (var p = 0; p < pres.length; p++) {
+        var pre = pres[p];
+        var code = pre.querySelector('code');
+        pre.setAttribute('style', WECHAT_STYLES.pre);
+        if (code) { pre.textContent = code.textContent; pre.setAttribute('style', WECHAT_STYLES.pre); }
+    }
+
+    // Table wrapper
+    var tables = div.querySelectorAll('table');
+    for (var t = 0; t < tables.length; t++) {
+        var wrapper = document.createElement('div');
+        wrapper.setAttribute('style', 'overflow-x:auto;margin:12px 0;');
+        tables[t].parentNode.insertBefore(wrapper, tables[t]);
+        wrapper.appendChild(tables[t]);
+    }
+
+    // KaTeX: strip data attributes, keep rendered math
+    var katexEls = div.querySelectorAll('.katex, .katex-display');
+    for (var k = 0; k < katexEls.length; k++) {
+        katexEls[k].setAttribute('style', katexEls[k].getAttribute('style') || '');
+    }
+
+    // Highlight.js -> inline styles for wechat
+    var hljsEls = div.querySelectorAll('.hljs');
+    for (var h = 0; h < hljsEls.length; h++) {
+        hljsEls[h].setAttribute('style', 'background:#282c34;color:#abb2bf;font-size:13px;line-height:1.6;padding:16px;border-radius:6px;overflow-x:auto;');
+    }
+
+    var body = div.innerHTML;
+
+    if (contentOnly) return body;
+
+    var meta = getArticleMeta();
+    return '<html><head><meta charset="utf-8"><title>' + escapeHtml(meta.title) + '</title></head>' +
+        '<body style="' + WECHAT_STYLES.body + '">' +
+        '<div style="' + WECHAT_STYLES.container + '">' +
+        '<h1 style="' + WECHAT_STYLES.h1 + '">' + escapeHtml(meta.title) + '</h1>' +
+        (meta.date ? '<p style="font-size:13px;color:#999;margin-bottom:16px;">' + escapeHtml(meta.date) + '</p>' : '') +
+        body +
+        '</div></body></html>';
+}
+
+function exportWechatHTML() {
+    toggleExportMenu();
+    try {
+        var html = buildWechatHTML(true);
+        navigator.clipboard.writeText(html).then(function() {
+            toast('✓ 公众号 HTML 已复制，可直接粘贴到微信编辑器');
+        }).catch(function() {
+            toast('复制失败，请重试', true);
+        });
+    } catch(e) {
+        toast('生成失败: ' + e.message, true);
+    }
+}
+
+function exportRichText() {
+    toggleExportMenu();
+    try {
+        var html = buildWechatHTML(false);
+        navigator.clipboard.writeText(html).then(function() {
+            toast('✓ 富文本 HTML 已复制');
+        }).catch(function() {
+            toast('复制失败，请重试', true);
+        });
+    } catch(e) {
+        toast('生成失败: ' + e.message, true);
+    }
+}
+
+function downloadFile(filename, content, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function exportMarkdown() {
+    toggleExportMenu();
+    var meta = getArticleMeta();
+    var filename = (meta.title || 'article') + '.md';
+    try {
+        var content = ta.value;
+        downloadFile(filename, content, 'text/markdown;charset=utf-8');
+        toast('✓ 已下载 ' + filename);
+    } catch(e) {
+        toast('导出失败: ' + e.message, true);
+    }
+}
+
+function exportHTML() {
+    toggleExportMenu();
+    var meta = getArticleMeta();
+    var filename = (meta.title || 'article') + '.html';
+    try {
+        var html = buildWechatHTML(false);
+        downloadFile(filename, html, 'text/html;charset=utf-8');
+        toast('✓ 已下载 ' + filename);
+    } catch(e) {
+        toast('导出失败: ' + e.message, true);
+    }
+}
+
+function exportPDF() {
+    toggleExportMenu();
+    try {
+        var html = buildWechatHTML(false);
+        var printWindow = window.open('', '_blank');
+        if (!printWindow) { toast('弹窗被拦截，请允许本站弹出窗口', true); return; }
+        printWindow.document.write(html);
+        printWindow.document.close();
+        toast('准备打印…');
+        setTimeout(function() { printWindow.print(); }, 500);
+    } catch(e) {
+        toast('导出失败: ' + e.message, true);
+    }
+}
+
+// ── File panel ──
+var _allArticleFiles = [];
+
 function refreshFileList() {
     fetch('/api/list')
         .then(function(r){return r.json()})
         .then(function(files){
-            var dd = document.getElementById('fileDropdown');
-            dd.innerHTML = files.map(function(f){ return '<div class="file-item" onclick="loadArticle(\''+f.file+'\')"><span class="fi-name">'+f.file+'</span><span style="color:var(--text-dim);font-size:10px">'+(f.date||'')+'</span></div>'; }).join('');
-            if(!files.length) dd.innerHTML='<div class="file-item" style="color:var(--text-dim)">暂无文章</div>';
+            _allArticleFiles = files;
+            renderFilePanel(files);
         });
 }
-function toggleFileList() {
-    var dd = document.getElementById('fileDropdown');
-    dd.classList.contains('show') ? dd.classList.remove('show') : (refreshFileList(), dd.classList.add('show'));
+
+function renderFilePanel(files) {
+    var list = document.getElementById('fpList');
+    var query = (document.getElementById('fpSearchInput').value || '').trim().toLowerCase();
+    if (query) {
+        files = files.filter(function(f) {
+            return f.file.toLowerCase().indexOf(query) !== -1 ||
+                   (f.title && f.title.toLowerCase().indexOf(query) !== -1) ||
+                   (f.tags && f.tags.toLowerCase().indexOf(query) !== -1);
+        });
+    }
+    if (!files.length) {
+        list.innerHTML = '<div class="fp-empty">' + (query ? '无匹配文章' : '暂无文章') + '</div>';
+        return;
+    }
+    var activeFile = currentFile;
+    list.innerHTML = files.map(function(f) {
+        var cls = 'fp-item' + (f.file === activeFile ? ' active' : '');
+        var tags = f.tags ? f.tags.replace(/[\[\]]/g, '') : '';
+        return '<div class="' + cls + '" onclick="loadArticle(\'' + f.file + '\')">' +
+            '<span class="fp-name">' + escapeHtml(f.file) + '</span>' +
+            (tags ? '<span class="fp-tags">' + escapeHtml(tags) + '</span>' : '') +
+            '<span class="fp-date">' + (f.date || '') + '</span>' +
+            '</div>';
+    }).join('');
 }
+
+function filterFilePanel() {
+    renderFilePanel(_allArticleFiles);
+}
+
+function toggleFilePanel() {
+    var panel = document.getElementById('filePanel');
+    var overlay = document.getElementById('filePanelOverlay');
+    var isOpen = !panel.classList.contains('hidden');
+    if (isOpen) {
+        closeFilePanel();
+    } else {
+        refreshFileList();
+        panel.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+        document.getElementById('fpSearchInput').value = '';
+        setTimeout(function() { document.getElementById('fpSearchInput').focus(); }, 100);
+    }
+}
+
+function closeFilePanel() {
+    document.getElementById('filePanel').classList.add('hidden');
+    document.getElementById('filePanelOverlay').classList.add('hidden');
+}
+
 document.addEventListener('click', function(e) {
-    if (!e.target.closest('.file-list-dropdown')) document.getElementById('fileDropdown').classList.remove('show');
+    if (!e.target.closest('.export-dropdown')) document.getElementById('exportMenu').classList.add('hidden');
 });
 
 // ── Start ──
