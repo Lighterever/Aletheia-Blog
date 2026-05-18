@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
     <title>瓶之内 - ℵ · aletheia</title>
     <meta name="description" content="关于那些被刻意推开的温暖，以及瓶中困兽的自我剖析。">
@@ -24,6 +24,8 @@
     <meta name="twitter:description" content="关于那些被刻意推开的温暖，以及瓶中困兽的自我剖析。">
 
     <link rel="icon" type="image/svg+xml" href="https://www.lighterever.com/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css" id="gh-md-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css" id="gh-md-light-theme" disabled>
     <link rel="stylesheet" href="https://www.lighterever.com/css/base.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/home.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/vault.css">
@@ -31,10 +33,11 @@
     <link rel="stylesheet" href="https://www.lighterever.com/css/reader.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/timeline.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/letters.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-light-theme" disabled>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
     <script type="application/ld+json">
@@ -215,10 +218,34 @@
             var next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
+            var isDark = next === 'dark';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+            var isDark = theme !== 'light';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
+
             try { hljs.highlightAll(); } catch (e) {}
+
+            enhanceCodeBlocks();
+            addHeadingAnchors();
+            wrapTables();
 
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(document.body, {
@@ -232,6 +259,64 @@
 
             initFootnoteTooltip();
         });
+
+        function enhanceCodeBlocks() {
+            var pres = document.querySelectorAll('.article-content pre');
+            pres.forEach(function(pre) {
+                var code = pre.querySelector('code');
+                if (!code) return;
+                var langMatch = (code.className || '').match(/language-(\S+)/);
+                var lang = langMatch ? langMatch[1] : '';
+                var wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                var header = document.createElement('div');
+                header.className = 'code-block-header';
+                header.innerHTML = '<span class="code-language">' + (lang || 'code') + '</span>' +
+                    '<button class="code-copy-btn" title="复制代码">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                    '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                    '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                    '</svg><span>复制</span></button>';
+                wrapper.insertBefore(header, pre);
+                pre.classList.add('code-block-content');
+                var copyBtn = header.querySelector('.code-copy-btn');
+                copyBtn.addEventListener('click', function() {
+                    navigator.clipboard.writeText(code.textContent).then(function() {
+                        copyBtn.classList.add('copied');
+                        copyBtn.querySelector('span').textContent = '已复制';
+                        setTimeout(function() { copyBtn.classList.remove('copied'); copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+                    }).catch(function() {
+                        copyBtn.querySelector('span').textContent = '复制失败';
+                        setTimeout(function() { copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+                    });
+                });
+            });
+        }
+
+        function addHeadingAnchors() {
+            var headings = document.querySelectorAll('.article-content h2, .article-content h3, .article-content h4');
+            headings.forEach(function(h, i) {
+                if (!h.id) h.id = 'heading-' + i;
+                var anchor = document.createElement('a');
+                anchor.className = 'heading-anchor';
+                anchor.href = '#' + h.id;
+                anchor.textContent = '§';
+                anchor.setAttribute('aria-label', 'Permalink to ' + (h.textContent || '').trim());
+                h.insertBefore(anchor, h.firstChild);
+            });
+        }
+
+        function wrapTables() {
+            var tables = document.querySelectorAll('.article-content table');
+            tables.forEach(function(table) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
 
         function initFootnoteTooltip() {
             var refs = document.querySelectorAll('sup a[data-footnote-ref]');
@@ -273,12 +358,20 @@
 
             function positionTip(tip, anchor) {
                 var rect = anchor.getBoundingClientRect();
+                var tipH = tip.offsetHeight || 100;
                 var tipW = tip.offsetWidth || 280;
                 var left = rect.left + rect.width / 2 - tipW / 2;
                 if (left < 12) left = 12;
                 if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+                var top;
+                if (rect.top > tipH + 12) {
+                    top = rect.top - tipH - 12;
+                } else {
+                    top = rect.bottom + 12;
+                }
                 tip.style.left = left + 'px';
-                tip.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+                tip.style.top = top + 'px';
+                tip.style.bottom = 'auto';
             }
         }
     </script>

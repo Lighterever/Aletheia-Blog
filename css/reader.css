@@ -241,6 +241,7 @@
     color: var(--text-primary);
     letter-spacing: 0.01em;
     word-break: break-word;
+    font-variant-numeric: lining-nums tabular-nums;
 
     --heading-scale: 1.25;
     --font-size-base: 17px;
@@ -463,9 +464,9 @@
     background: var(--bg-tertiary);
     border: 1px solid var(--border-subtle);
     border-radius: 8px;
-    padding: 0;
+    padding: 16px;
     margin: var(--space-lg) 0;
-    overflow: hidden;
+    overflow-x: auto;
     position: relative;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
@@ -591,7 +592,7 @@
     position: absolute;
     top: 8px;
     left: 12px;
-    font-family: Georgia, serif;
+    font-family: 'Times New Roman', serif;
     font-size: 48px;
     line-height: 1;
     color: var(--accent-secondary);
@@ -686,8 +687,10 @@
     content: counter(ol-counter) ".";
     position: absolute;
     left: 0;
+    top: 0;
     font-family: var(--font-mono);
     font-size: 0.85em;
+    line-height: 1.7;
     color: var(--accent-primary);
     font-weight: 500;
 }

@@ -16,7 +16,7 @@
             --text-secondary: #a0a0b8;
             --text-muted: #606080;
             --text-dim: #303050;
-            --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Menlo', monospace;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
             --transition-normal: 0.3s ease;
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,7 +39,7 @@
         }
         .scatter {
             position: absolute;
-            font-family: monospace;
+            font-family: var(--font-mono);
             font-size: 14px;
             color: rgba(0,255,136,0.3);
             pointer-events: none;

@@ -22,7 +22,9 @@ const SITE_CONFIG = {
 
 marked.setOptions({
     gfm: true,
-    breaks: false,
+    breaks: true,
+    headerIds: false,
+    mangle: false,
 });
 marked.use(markedFootnote());
 marked.use(markedAlert());
@@ -283,7 +285,7 @@ function generateArticleHtml(article, baseUrl) {
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
     <title>${escapeHtml(article.title)} - ${SITE_CONFIG.title}</title>
     <meta name="description" content="${escapeHtml(article.description || '')}">
@@ -304,6 +306,8 @@ ${(article.tags || []).map(t => `    <meta property="article:tag" content="${esc
     <meta name="twitter:description" content="${escapeHtml(article.description || '')}">
 
     <link rel="icon" type="image/svg+xml" href="${baseUrl}/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css" id="gh-md-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css" id="gh-md-light-theme" disabled>
     <link rel="stylesheet" href="${baseUrl}/css/base.css">
     <link rel="stylesheet" href="${baseUrl}/css/home.css">
     <link rel="stylesheet" href="${baseUrl}/css/vault.css">
@@ -311,10 +315,11 @@ ${(article.tags || []).map(t => `    <meta property="article:tag" content="${esc
     <link rel="stylesheet" href="${baseUrl}/css/reader.css">
     <link rel="stylesheet" href="${baseUrl}/css/timeline.css">
     <link rel="stylesheet" href="${baseUrl}/css/letters.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-light-theme" disabled>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
     <script type="application/ld+json">
@@ -375,10 +380,34 @@ ${JSON.stringify(jsonLd, null, 4)}
             var next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
+            var isDark = next === 'dark';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+            var isDark = theme !== 'light';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
+
             try { hljs.highlightAll(); } catch (e) {}
+
+            enhanceCodeBlocks();
+            addHeadingAnchors();
+            wrapTables();
 
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(document.body, {
@@ -392,6 +421,64 @@ ${JSON.stringify(jsonLd, null, 4)}
 
             initFootnoteTooltip();
         });
+
+        function enhanceCodeBlocks() {
+            var pres = document.querySelectorAll('.article-content pre');
+            pres.forEach(function(pre) {
+                var code = pre.querySelector('code');
+                if (!code) return;
+                var langMatch = (code.className || '').match(/language-(\\S+)/);
+                var lang = langMatch ? langMatch[1] : '';
+                var wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                var header = document.createElement('div');
+                header.className = 'code-block-header';
+                header.innerHTML = '<span class="code-language">' + (lang || 'code') + '</span>' +
+                    '<button class="code-copy-btn" title="\u590d\u5236\u4ee3\u7801">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                    '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                    '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                    '</svg><span>\u590d\u5236</span></button>';
+                wrapper.insertBefore(header, pre);
+                pre.classList.add('code-block-content');
+                var copyBtn = header.querySelector('.code-copy-btn');
+                copyBtn.addEventListener('click', function() {
+                    navigator.clipboard.writeText(code.textContent).then(function() {
+                        copyBtn.classList.add('copied');
+                        copyBtn.querySelector('span').textContent = '\u5df2\u590d\u5236';
+                        setTimeout(function() { copyBtn.classList.remove('copied'); copyBtn.querySelector('span').textContent = '\u590d\u5236'; }, 2000);
+                    }).catch(function() {
+                        copyBtn.querySelector('span').textContent = '\u590d\u5236\u5931\u8d25';
+                        setTimeout(function() { copyBtn.querySelector('span').textContent = '\u590d\u5236'; }, 2000);
+                    });
+                });
+            });
+        }
+
+        function addHeadingAnchors() {
+            var headings = document.querySelectorAll('.article-content h2, .article-content h3, .article-content h4');
+            headings.forEach(function(h, i) {
+                if (!h.id) h.id = 'heading-' + i;
+                var anchor = document.createElement('a');
+                anchor.className = 'heading-anchor';
+                anchor.href = '#' + h.id;
+                anchor.textContent = '\u00A7';
+                anchor.setAttribute('aria-label', 'Permalink to ' + (h.textContent || '').trim());
+                h.insertBefore(anchor, h.firstChild);
+            });
+        }
+
+        function wrapTables() {
+            var tables = document.querySelectorAll('.article-content table');
+            tables.forEach(function(table) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
 
         function initFootnoteTooltip() {
             var refs = document.querySelectorAll('sup a[data-footnote-ref]');
@@ -492,11 +579,6 @@ Crawl-delay: 1`;
 }
 
 function main() {
-    if (!fs.existsSync(ARTICLES_DIR)) {
-        console.error('articles/ directory not found');
-        process.exit(1);
-    }
-
     if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR, { recursive: true });
     }
@@ -507,26 +589,34 @@ function main() {
         aboutArticle = parseMdFile(README_FILE);
     }
 
-    const files = fs.readdirSync(ARTICLES_DIR)
-        .filter((f) => f.endsWith('.md'))
-        .sort();
+    var articles = [];
+    if (fs.existsSync(ARTICLES_DIR)) {
+        const files = fs.readdirSync(ARTICLES_DIR)
+            .filter((f) => f.endsWith('.md'))
+            .sort();
 
-    if (files.length === 0 && !aboutArticle) {
-        console.log('No .md files found in articles/');
-        return;
+        if (files.length > 0) {
+            articles = files.map((f) => {
+                const filePath = path.join(ARTICLES_DIR, f);
+                console.log(`  parsing: ${f}`);
+                const parsed = parseMdFile(filePath);
+
+                if (!parsed.description) {
+                    console.warn(`  ⚠ Warning: Missing 'description' in ${f} - SEO description will be empty`);
+                }
+
+                return parsed;
+            });
+        }
+    } else {
+        console.log('articles/ directory not found (this is normal in production), skipping article generation');
     }
 
-    const articles = files.map((f) => {
-        const filePath = path.join(ARTICLES_DIR, f);
-        console.log(`  parsing: ${f}`);
-        const parsed = parseMdFile(filePath);
-
-        if (!parsed.description) {
-            console.warn(`  ⚠ Warning: Missing 'description' in ${f} - SEO description will be empty`);
-        }
-
-        return parsed;
-    });
+    if (articles.length === 0 && !aboutArticle) {
+        console.log('No .md files found — nothing to build.');
+        injectCacheBuster();
+        return;
+    }
 
     const output = generateDataJs(articles, aboutArticle);
     fs.writeFileSync(OUTPUT_FILE, output, 'utf-8');
@@ -569,28 +659,52 @@ function main() {
 
     if (!fs.existsSync(TIMELINE_DIR)) {
         console.log('\ntimeline/ directory not found, skipping timeline generation');
-        return;
+    } else {
+        const timelineFiles = fs.readdirSync(TIMELINE_DIR)
+            .filter((f) => f.endsWith('.md'))
+            .sort();
+
+        if (timelineFiles.length === 0) {
+            console.log('\nNo .md files found in timeline/');
+        } else {
+            console.log('\nGenerating timeline data...');
+            const topics = timelineFiles.map((f) => {
+                const filePath = path.join(TIMELINE_DIR, f);
+                console.log(`  parsing timeline: ${f}`);
+                return parseTimelineFile(filePath);
+            }).filter(Boolean);
+
+            const timelineOutput = generateTimelineJs(topics);
+            fs.writeFileSync(TIMELINE_OUTPUT, timelineOutput, 'utf-8');
+            console.log(`\nGenerated timeline-data.js with ${topics.length} topic(s)`);
+        }
     }
 
-    const timelineFiles = fs.readdirSync(TIMELINE_DIR)
-        .filter((f) => f.endsWith('.md'))
-        .sort();
+    injectCacheBuster();
+}
 
-    if (timelineFiles.length === 0) {
-        console.log('\nNo .md files found in timeline/');
-        return;
-    }
+function injectCacheBuster() {
+    const indexPath = path.join(__dirname, '..', 'index.html');
+    if (!fs.existsSync(indexPath)) return;
 
-    console.log('\nGenerating timeline data...');
-    const topics = timelineFiles.map((f) => {
-        const filePath = path.join(TIMELINE_DIR, f);
-        console.log(`  parsing timeline: ${f}`);
-        return parseTimelineFile(filePath);
-    }).filter(Boolean);
+    const buildVersion = Date.now().toString(36);
+    let html = fs.readFileSync(indexPath, 'utf-8');
 
-    const timelineOutput = generateTimelineJs(topics);
-    fs.writeFileSync(TIMELINE_OUTPUT, timelineOutput, 'utf-8');
-    console.log(`\nGenerated timeline-data.js with ${topics.length} topic(s)`);
+    html = html.replace(
+        /(<script src="\/data\/data\.js)("><\/script>)/,
+        '$1?v=' + buildVersion + '$2'
+    );
+    html = html.replace(
+        /(<script src="\/data\/timeline-data\.js)("><\/script>)/,
+        '$1?v=' + buildVersion + '$2'
+    );
+    html = html.replace(
+        /(<script type="module" src="\/js\/app\.js)("><\/script>)/,
+        '$1?v=' + buildVersion + '$2'
+    );
+
+    fs.writeFileSync(indexPath, html, 'utf-8');
+    console.log('  ✓ cache-busting injected into index.html');
 }
 
 main();

@@ -821,7 +821,7 @@ body.nav-hidden #timelinePage:not(.hidden) {
 
 .card-article-link {
     display: block;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: var(--font-mono);
     font-size: 11px;
     color: var(--accent-primary);
     text-decoration: none;

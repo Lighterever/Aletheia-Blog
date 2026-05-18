@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>ℵ · aletheia</title>
     <style>html{visibility:hidden;}</style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="/css/letters.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -33,14 +33,14 @@
             <circle cx="100" cy="100" r="95" fill="none" stroke-width="1"/>
             <circle cx="100" cy="100" r="70" fill="none" stroke-width="1"/>
             <circle cx="100" cy="100" r="45" fill="none" stroke-width="1"/>
-            <text x="100" y="15" font-size="10" text-anchor="middle" font-family="JetBrains Mono">A</text>
-            <text x="170" y="45" font-size="10" text-anchor="middle" font-family="JetBrains Mono">B</text>
-            <text x="185" y="105" font-size="10" text-anchor="middle" font-family="JetBrains Mono">C</text>
-            <text x="170" y="165" font-size="10" text-anchor="middle" font-family="JetBrains Mono">D</text>
-            <text x="100" y="190" font-size="10" text-anchor="middle" font-family="JetBrains Mono">E</text>
-            <text x="30" y="165" font-size="10" text-anchor="middle" font-family="JetBrains Mono">F</text>
-            <text x="15" y="105" font-size="10" text-anchor="middle" font-family="JetBrains Mono">G</text>
-            <text x="30" y="45" font-size="10" text-anchor="middle" font-family="JetBrains Mono">H</text>
+            <text x="100" y="15" font-size="10" text-anchor="middle" font-family="monospace">A</text>
+            <text x="170" y="45" font-size="10" text-anchor="middle" font-family="monospace">B</text>
+            <text x="185" y="105" font-size="10" text-anchor="middle" font-family="monospace">C</text>
+            <text x="170" y="165" font-size="10" text-anchor="middle" font-family="monospace">D</text>
+            <text x="100" y="190" font-size="10" text-anchor="middle" font-family="monospace">E</text>
+            <text x="30" y="165" font-size="10" text-anchor="middle" font-family="monospace">F</text>
+            <text x="15" y="105" font-size="10" text-anchor="middle" font-family="monospace">G</text>
+            <text x="30" y="45" font-size="10" text-anchor="middle" font-family="monospace">H</text>
         </svg>
     </div>
 
@@ -167,6 +167,10 @@
         <div class="articles-topbar">
             <span class="articles-logo">ℵ</span>
             <input type="text" class="search-box" placeholder="grep..." />
+            <button class="tag-filter-btn" id="tagFilterBtn" aria-label="Filter by tags">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+                <span class="tag-filter-count" style="display:none"></span>
+            </button>
             <a class="exit-btn" id="articlesExit">exit</a>
         </div>
         <div class="table-header">
@@ -174,11 +178,32 @@
             <span class="sort-col" data-sort="title">TITLE <span class="sort-arrow"></span></span>
             <span class="sort-col" data-sort="tags">TAGS <span class="sort-arrow"></span></span>
         </div>
-        <div id="filterStatus" class="filter-status" style="display:none"></div>
         <div id="articlesEmpty" class="articles-empty"></div>
         <div id="articlesList" class="articles-list"></div>
-        <div id="tagFilter" class="tag-filter">
-            <button class="tag-btn active" data-tag="all">全部</button>
+        <div id="articlesMatchCount" class="articles-match-count" style="display:none"></div>
+        <div id="tagPopup" class="tag-popup-overlay" style="display:none">
+            <div class="tag-popup">
+                <div class="tag-popup-header">
+                    <span class="tag-popup-title"># 标签筛选</span>
+                    <button class="tag-popup-close" id="tagPopupClose">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                </div>
+                <div class="tag-popup-search">
+                    <input type="text" class="tag-search-input" id="tagSearchInput" placeholder="搜索标签..." />
+                </div>
+                <div class="tag-popup-body" id="tagPopupList"></div>
+                <div class="tag-popup-footer">
+                    <span class="tag-popup-mode">
+                        <span class="mode-option active" data-mode="or">OR</span>
+                        <span class="mode-option" data-mode="and">AND</span>
+                    </span>
+                    <div class="tag-popup-actions">
+                        <span class="tag-popup-confirm" id="tagPopupConfirm">确定</span>
+                        <span class="tag-popup-clear" id="tagPopupClear">清除</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -361,8 +386,8 @@
     <script src="https://cdn.jsdelivr.net/npm/marked-footnote@1.4.0/dist/index.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked-alert@2.1.2/dist/index.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="/data/data.js"></script>
-    <script src="/data/timeline-data.js"></script>
-    <script type="module" src="/js/app.js"></script>
+    <script src="/data/data.js?v=mpakyn1j"></script>
+    <script src="/data/timeline-data.js?v=mpakyn1j"></script>
+    <script type="module" src="/js/app.js?v=mpakyn1j"></script>
 </body>
 </html>

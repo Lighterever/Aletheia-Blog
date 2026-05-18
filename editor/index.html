@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ℵ · Editor</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="stylesheet" href="/css/base.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css" id="gh-md-dark-theme">
 <link rel="stylesheet" href="/css/reader.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-dark-theme">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <style>
 :root { --bg-primary: #0a0a0f; }
@@ -17,23 +19,60 @@ html, body { height: 100%; overflow: hidden; margin: 0; }
 body { font-family: var(--font-mono); background: var(--bg-primary); color: var(--text-primary); display: flex; flex-direction: column; }
 
 .editor-toolbar {
-    display: flex; align-items: center; gap: 2px; padding: 6px 10px;
+    display: flex; align-items: flex-end; gap: 0; padding: 0;
     background: rgba(var(--bg-primary-rgb), 0.85);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border-subtle);
     flex-shrink: 0; flex-wrap: wrap; z-index: 100;
+    overflow-x: auto;
 }
-.tb-group { display: flex; gap: 1px; }
-.tb-group + .tb-group { margin-left: 4px; padding-left: 4px; border-left: 1px solid rgba(255,255,255,0.08); }
+.editor-logo {
+    display: flex; align-items: center; gap: 8px;
+    text-decoration: none; opacity: 0.8; padding: 8px 12px;
+    border-right: 1px solid rgba(255,255,255,0.1); flex-shrink: 0;
+    transition: opacity 0.15s; align-self: center;
+}
+.editor-logo:hover { opacity: 1; }
+.editor-logo .logo-symbol { font-size: 22px; }
+.editor-logo .logo-badge { font-size: 10px; }
+
+.tb-group {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 6px 10px 8px; position: relative; flex-shrink: 0;
+}
+.tb-group + .tb-group {
+    border-left: 1px solid rgba(255,255,255,0.06);
+}
+.tb-group::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 9px; font-weight: 500; letter-spacing: 0.08em;
+    color: var(--text-dim); text-transform: uppercase;
+    padding: 0 4px; white-space: nowrap;
+    font-family: var(--font-mono);
+}
+.tb-group .tb-row { display: flex; gap: 1px; }
+
 .tb-btn {
-    padding: 5px 8px; border: 1px solid transparent; background: transparent;
+    padding: 4px 10px; border: 1px solid transparent; background: transparent;
     color: var(--text-secondary); cursor: pointer; border-radius: 4px;
     font-family: var(--font-mono); font-size: 11px; white-space: nowrap;
-    transition: all 0.15s;
+    transition: all 0.15s; letter-spacing: 0.01em;
 }
 .tb-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-subtle); }
 .tb-btn b { color: var(--accent-primary); }
 .tb-btn em { color: var(--accent-tertiary); font-style: italic; }
+
+.tb-note { color: #539BF5 !important; }
+.tb-note:hover { background: rgba(83,155,245,0.12); border-color: rgba(83,155,245,0.25); }
+.tb-tip { color: #57AB5A !important; }
+.tb-tip:hover { background: rgba(87,171,90,0.12); border-color: rgba(87,171,90,0.25); }
+.tb-important { color: #986EE2 !important; }
+.tb-important:hover { background: rgba(152,110,226,0.12); border-color: rgba(152,110,226,0.25); }
+.tb-warning { color: #C69026 !important; }
+.tb-warning:hover { background: rgba(198,144,38,0.12); border-color: rgba(198,144,38,0.25); }
+.tb-caution { color: #E5534B !important; }
+.tb-caution:hover { background: rgba(229,83,75,0.12); border-color: rgba(229,83,75,0.25); }
 
 .editor-body { display: flex; flex: 1; overflow: hidden; }
 .editor-left { width: 50%; display: flex; flex-direction: column; border-right: 1px solid var(--border-subtle); }
@@ -103,7 +142,9 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
     .editor-body { flex-direction: column; }
     .editor-left, .editor-right { width: 100%; height: 50%; }
     .editor-left { border-right: none; border-bottom: 1px solid var(--border-subtle); }
-    .tb-btn { font-size: 10px; padding: 4px 6px; }
+    .tb-group { padding: 4px 6px 6px; }
+    .tb-group::before { font-size: 8px; }
+    .tb-btn { font-size: 10px; padding: 6px 10px; min-height: 36px; }
 }
 </style>
 </head>
@@ -111,55 +152,63 @@ body { font-family: var(--font-mono); background: var(--bg-primary); color: var(
 
 <!-- TOOLBAR -->
 <div class="editor-toolbar">
-<div class="tb-group">
-<button class="tb-btn" title="粗体 Ctrl+B" onclick="wrap('**','**')"><b>B</b></button>
-<button class="tb-btn" title="斜体 Ctrl+I" onclick="wrap('*','*')"><em>I</em></button>
-<button class="tb-btn" title="删除线 Ctrl+D" onclick="wrap('~~','~~')"><s>S</s></button>
-<button class="tb-btn" title="行内代码" onclick="wrap('`','`')">&lt;/&gt;</button>
-<button class="tb-btn" title="高亮 ==" onclick="wrap('==','==')">H</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="H1" onclick="pre('# ')">H1</button>
-<button class="tb-btn" title="H2" onclick="pre('## ')">H2</button>
-<button class="tb-btn" title="H3" onclick="pre('### ')">H3</button>
-<button class="tb-btn" title="H4" onclick="pre('#### ')">H4</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="链接" onclick="wrap('[','](url)')">🔗</button>
-<button class="tb-btn" title="图片" onclick="wrap('![',']()')">🖼</button>
-<button class="tb-btn" title="引用块" onclick="pre('> ')">❝</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="无序列表" onclick="listPre('- ')">•</button>
-<button class="tb-btn" title="有序列表" onclick="listPre('1. ')">1.</button>
-<button class="tb-btn" title="任务列表" onclick="listPre('- [ ] ')">☐</button>
-<button class="tb-btn" title="表格" onclick="insertTable()">⊞</button>
-<button class="tb-btn" title="分割线" onclick="put('\n---\n')">—</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="代码块" onclick="wrapBlock('\n```\n','\n```\n')">```</button>
-<button class="tb-btn" title="脚注" onclick="insertFootnote()">¹</button>
-<button class="tb-btn" title="折叠面板" onclick="insertDetails()">▸</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="行内公式" onclick="wrap('$','$')">ƒ</button>
-<button class="tb-btn" title="块级公式" onclick="wrapBlock('\n$$\n','\n$$\n')">ƒƒ</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="NOTE" onclick="insertAlert('NOTE')" style="color:#539BF5">N</button>
-<button class="tb-btn" title="TIP" onclick="insertAlert('TIP')" style="color:#57AB5A">T</button>
-<button class="tb-btn" title="IMPORTANT" onclick="insertAlert('IMPORTANT')" style="color:#986EE2">!</button>
-<button class="tb-btn" title="WARNING" onclick="insertAlert('WARNING')" style="color:#C69026">⚠</button>
-<button class="tb-btn" title="CAUTION" onclick="insertAlert('CAUTION')" style="color:#E5534B">☠</button>
-</div>
-<div class="tb-group">
-<button class="tb-btn" title="下划线" onclick="wrap('<u>','</u>')">U</button>
-<button class="tb-btn" title="荧光笔" onclick="wrap('<ins>','</ins>')">⌇</button>
-<button class="tb-btn" title="下标 ~" onclick="wrap('~','~')">x₂</button>
-<button class="tb-btn" title="上标 ^" onclick="wrap('^','^')">x²</button>
-<button class="tb-btn" title="按键" onclick="wrap('<kbd>','</kbd>')">⌨</button>
-<button class="tb-btn" title="小字" onclick="wrap('<small>','</small>')">A</button>
-</div>
+<a href="/" class="editor-logo">
+    <span class="logo-symbol">ℵ</span>
+    <span class="logo-badge">Editor</span>
+</a>
+
+<div class="tb-group" data-label="文本样式"><div class="tb-row">
+ <button class="tb-btn" title="粗体 Ctrl+B" onclick="wrap('**','**')"><b>B</b> 粗体</button>
+ <button class="tb-btn" title="斜体 Ctrl+I" onclick="wrap('*','*')"><em>I</em> 斜体</button>
+ <button class="tb-btn" title="删除线" onclick="wrap('~~','~~')"><s>S</s> 删线</button>
+ <button class="tb-btn" title="行内代码" onclick="wrap('`','`')">&lt;/&gt; 代码</button>
+ <button class="tb-btn" title="高亮标记 ==" onclick="wrap('==','==')">⌂ 高亮</button>
+ </div></div>
+
+ <div class="tb-group" data-label="标题"><div class="tb-row">
+ <button class="tb-btn" title="一级标题" onclick="pre('# ')">H1</button>
+ <button class="tb-btn" title="二级标题" onclick="pre('## ')">H2</button>
+ <button class="tb-btn" title="三级标题" onclick="pre('### ')">H3</button>
+ <button class="tb-btn" title="四级标题" onclick="pre('#### ')">H4</button>
+ </div></div>
+
+ <div class="tb-group" data-label="链接/引用"><div class="tb-row">
+ <button class="tb-btn" title="链接" onclick="wrap('[','](url)')">🔗 链接</button>
+ <button class="tb-btn" title="图片" onclick="wrap('![',']()')">🖼 图片</button>
+ <button class="tb-btn" title="引用块" onclick="pre('> ')">❝ 引用</button>
+ </div></div>
+
+ <div class="tb-group" data-label="列表"><div class="tb-row">
+ <button class="tb-btn" title="无序列表" onclick="listPre('- ')">• 无序</button>
+ <button class="tb-btn" title="有序列表" onclick="listPre('1. ')">1. 有序</button>
+ <button class="tb-btn" title="任务列表" onclick="listPre('- [ ] ')">☐ 任务</button>
+ <button class="tb-btn" title="表格" onclick="insertTable()">⊞ 表格</button>
+ <button class="tb-btn" title="分割线" onclick="put('\n---\n')">— 分割</button>
+ </div></div>
+
+ <div class="tb-group" data-label="代码/公式"><div class="tb-row">
+ <button class="tb-btn" title="代码块" onclick="wrapBlock('\n```\n','\n```\n')">``` 代码块</button>
+ <button class="tb-btn" title="行内公式 $" onclick="wrap('$','$')">ƒ 公式</button>
+ <button class="tb-btn" title="块级公式" onclick="wrapBlock('\n$$\n','\n$$\n')">ƒƒ 块公式</button>
+ <button class="tb-btn" title="脚注" onclick="insertFootnote()">¹ 脚注</button>
+ <button class="tb-btn" title="折叠面板" onclick="insertDetails()">▸ 折叠</button>
+ </div></div>
+
+ <div class="tb-group" data-label="提示框"><div class="tb-row">
+ <button class="tb-btn tb-note" title="NOTE 提示框" onclick="insertAlert('NOTE')">NOTE</button>
+ <button class="tb-btn tb-tip" title="TIP 提示框" onclick="insertAlert('TIP')">TIP</button>
+ <button class="tb-btn tb-important" title="IMPORTANT 提示框" onclick="insertAlert('IMPORTANT')">!</button>
+ <button class="tb-btn tb-warning" title="WARNING 提示框" onclick="insertAlert('WARNING')">⚠</button>
+ <button class="tb-btn tb-caution" title="CAUTION 提示框" onclick="insertAlert('CAUTION')">☠</button>
+ </div></div>
+
+ <div class="tb-group" data-label="HTML 元素"><div class="tb-row">
+ <button class="tb-btn" title="下划线" onclick="wrap('<u>','</u>')"><u>U</u></button>
+ <button class="tb-btn" title="荧光笔" onclick="wrap('<ins>','</ins>')"><ins>I</ins></button>
+ <button class="tb-btn" title="上标" onclick="wrap('^','^')">x²</button>
+ <button class="tb-btn" title="下标" onclick="wrap('~','~')">x₂</button>
+ <button class="tb-btn" title="键盘按键" onclick="wrap('<kbd>','</kbd>')">⌨ KBD</button>
+ </div></div>
 </div>
 
 <!-- BODY -->
@@ -224,10 +273,119 @@ function render() {
     if (typeof window.mdPreprocess !== 'undefined') h = window.mdPreprocess.restoreLatex(h);
     preview.innerHTML = h;
     try { hljs.highlightAll(); } catch(e){}
+    enhanceCodeBlocks(preview);
+    addHeadingAnchors(preview);
+    wrapTables(preview);
+    enhanceFootnotes(preview);
     if (typeof renderMathInElement !== 'undefined') {
         try { renderMathInElement(preview, { delimiters: [{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false }); } catch(e){}
     }
     wordCountEl.textContent = ta.value.replace(/\s/g,'').length + ' 字';
+}
+
+// ── DOM Enhancements ──
+function enhanceCodeBlocks(container) {
+    var pres = container.querySelectorAll('pre');
+    pres.forEach(function(pre) {
+        var code = pre.querySelector('code');
+        if (!code) return;
+        var langMatch = (code.className || '').match(/language-(\S+)/);
+        var lang = langMatch ? langMatch[1] : '';
+        var wrapper = document.createElement('div');
+        wrapper.className = 'code-block-wrapper';
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+        var header = document.createElement('div');
+        header.className = 'code-block-header';
+        header.innerHTML = '<span class="code-language">' + (lang || 'code') + '</span>' +
+            '<button class="code-copy-btn" title="复制代码">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+            '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+            '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+            '</svg><span>复制</span></button>';
+        wrapper.insertBefore(header, pre);
+        pre.classList.add('code-block-content');
+        var copyBtn = header.querySelector('.code-copy-btn');
+        copyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(code.textContent).then(function() {
+                copyBtn.classList.add('copied');
+                copyBtn.querySelector('span').textContent = '已复制';
+                setTimeout(function() { copyBtn.classList.remove('copied'); copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+            }).catch(function() {
+                copyBtn.querySelector('span').textContent = '复制失败';
+                setTimeout(function() { copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+            });
+        });
+    });
+}
+
+function addHeadingAnchors(container) {
+    var headings = container.querySelectorAll('h2, h3, h4');
+    headings.forEach(function(h, i) {
+        if (!h.id) h.id = 'heading-' + i;
+        var anchor = document.createElement('a');
+        anchor.className = 'heading-anchor';
+        anchor.href = '#' + h.id;
+        anchor.textContent = '\u00A7';
+        anchor.setAttribute('aria-label', 'Permalink to ' + (h.textContent || '').trim());
+        h.insertBefore(anchor, h.firstChild);
+    });
+}
+
+function wrapTables(container) {
+    var tables = container.querySelectorAll('table');
+    tables.forEach(function(table) {
+        var wrapper = document.createElement('div');
+        wrapper.className = 'table-wrapper';
+        table.parentNode.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+    });
+}
+
+function enhanceFootnotes(container) {
+    var oldTooltip = document.querySelector('.footnote-tooltip');
+    if (oldTooltip) oldTooltip.remove();
+    var refs = container.querySelectorAll('sup a[data-footnote-ref]');
+    if (!refs.length) return;
+    var tooltip = document.createElement('div');
+    tooltip.className = 'footnote-tooltip';
+    tooltip.style.display = 'none';
+    document.body.appendChild(tooltip);
+    var hideTimeout;
+    refs.forEach(function(link) {
+        link.addEventListener('mouseenter', function() {
+            clearTimeout(hideTimeout);
+            var id = link.getAttribute('href');
+            if (!id) return;
+            var footnote = container.querySelector(id);
+            if (!footnote) return;
+            var content = footnote.cloneNode(true);
+            var backrefs = content.querySelectorAll('[data-footnote-backref]');
+            backrefs.forEach(function(b) { b.remove(); });
+            var text = content.textContent.trim();
+            if (text.length > 300) text = text.slice(0, 300) + '\u2026';
+            tooltip.textContent = text;
+            tooltip.style.display = 'block';
+            var rect = link.getBoundingClientRect();
+            var tipW = tooltip.offsetWidth || 280;
+            var tipH = tooltip.offsetHeight || 100;
+            var left = rect.left + rect.width / 2 - tipW / 2;
+            if (left < 12) left = 12;
+            if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+            if (rect.top > tipH + 12) {
+                tooltip.style.top = (rect.top - tipH - 12) + 'px';
+            } else {
+                tooltip.style.top = (rect.bottom + 12) + 'px';
+            }
+            tooltip.style.left = left + 'px';
+            tooltip.style.bottom = 'auto';
+        });
+        link.addEventListener('mouseleave', function() {
+            hideTimeout = setTimeout(function() { tooltip.style.display = 'none'; }, 200);
+        });
+    });
+    tooltip.addEventListener('mouseenter', function() { clearTimeout(hideTimeout); });
+    tooltip.addEventListener('mouseleave', function() { tooltip.style.display = 'none'; });
 }
 ta.addEventListener('input', schedule);
 

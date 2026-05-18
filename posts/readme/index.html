@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
 
     <title>README - ℵ · aletheia</title>
     <meta name="description" content="关于 ℵ · aletheia 博客的 README —— 一个从密钥室走向开放的数学、计算机与哲学探索空间。">
@@ -23,6 +23,8 @@
     <meta name="twitter:description" content="关于 ℵ · aletheia 博客的 README —— 一个从密钥室走向开放的数学、计算机与哲学探索空间。">
 
     <link rel="icon" type="image/svg+xml" href="https://www.lighterever.com/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-dark.min.css" id="gh-md-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown-light.min.css" id="gh-md-light-theme" disabled>
     <link rel="stylesheet" href="https://www.lighterever.com/css/base.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/home.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/vault.css">
@@ -30,10 +32,11 @@
     <link rel="stylesheet" href="https://www.lighterever.com/css/reader.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/timeline.css">
     <link rel="stylesheet" href="https://www.lighterever.com/css/letters.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" id="hljs-dark-theme">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css" id="hljs-light-theme" disabled>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 
     <script type="application/ld+json">
@@ -167,88 +170,6 @@
 <li><strong>卡片关联</strong>：部分卡片可点击跳转到对应文章</li>
 </ul>
 <p><del>玩</del>看得开心<sup>·</sup></p>
-<hr>
-<h2>本地写作（编辑器）</h2>
-<p>项目内置了一个本地 Markdown 编辑器，读者无法访问。写文章只需一条命令：</p>
-<pre><code class="language-bash">npm run editor
-</code></pre>
-<p>自动打开浏览器进入编辑器页面（<code>http://localhost:3333</code>）。</p>
-<table>
-<thead>
-<tr>
-<th>功能</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>左侧编辑</td>
-<td>纯文本输入，带格式工具栏</td>
-</tr>
-<tr>
-<td>右侧预览</td>
-<td>实时渲染，效果与线上完全一致</td>
-</tr>
-<tr>
-<td>格式工具栏</td>
-<td>7 组按钮，覆盖所有支持的 markdown 格式</td>
-</tr>
-<tr>
-<td>智能 Enter</td>
-<td>列表/引用行末回车自动延续前缀，有序列表自动递增</td>
-</tr>
-<tr>
-<td>框选编号</td>
-<td>框选多行点 <code>1.</code> 按钮 → 自动编号 1. 2. 3.</td>
-</tr>
-<tr>
-<td>字数统计</td>
-<td>右下角实时显示</td>
-</tr>
-<tr>
-<td>快捷键</td>
-<td><code>Ctrl+S</code> 保存、<code>Ctrl+B</code> 粗体、<code>Ctrl+I</code> 斜体</td>
-</tr>
-<tr>
-<td>元数据表单</td>
-<td>标题、日期、标签、文件名一键填写</td>
-</tr>
-<tr>
-<td>文章列表</td>
-<td>加载已有文章、新建、保存、删除</td>
-</tr>
-<tr>
-<td>构建按钮</td>
-<td>保存后点「构建」→ 生成静态 HTML</td>
-</tr>
-</tbody></table>
-<h3>如何发布上线？</h3>
-<ol>
-<li><code>npm run editor</code> → 写文章 → 保存</li>
-<li>点「构建」按钮（或运行 <code>npm run build</code>）</li>
-<li><code>git add articles/ posts/ data/</code> → <code>git commit</code> → <code>git push</code></li>
-<li>Vercel 自动部署</li>
-</ol>
-<h3>为什么线上看不到编辑器？</h3>
-<p>编辑器是一个本地 Node.js 服务（<code>scripts/editor-server.js</code>，端口 3333），只在你的电脑上运行。Vercel 部署时只执行 <code>npm run build</code> 生成静态文件，不会启动编辑器服务。读者永远无法访问到编辑器。</p>
-<hr>
-<h2>Markdown 格式支持</h2>
-<p>完整的格式支持说明和写作示例：</p>
-<table>
-<thead>
-<tr>
-<th>文档</th>
-<th>说明</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="doc/quick-reference.md">格式速查卡</a></td>
-<td>一屏看完所有格式</td>
-</tr>
-<tr>
-<td><a href="doc/markdown-support.md">渲染系统指南</a></td>
-<td>完整格式列表、渲染管线、CSS 设计系统</td>
-</tr>
-</tbody></table>
 
         </article>
 
@@ -270,10 +191,34 @@
             var next = current === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
+            var isDark = next === 'dark';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            var theme = document.documentElement.getAttribute('data-theme') || 'dark';
+            var isDark = theme !== 'light';
+            var hlDark = document.getElementById('hljs-dark-theme');
+            var hlLight = document.getElementById('hljs-light-theme');
+            var ghDark = document.getElementById('gh-md-dark-theme');
+            var ghLight = document.getElementById('gh-md-light-theme');
+            if (hlDark) hlDark.disabled = !isDark;
+            if (hlLight) hlLight.disabled = isDark;
+            if (ghDark) ghDark.disabled = !isDark;
+            if (ghLight) ghLight.disabled = isDark;
+
             try { hljs.highlightAll(); } catch (e) {}
+
+            enhanceCodeBlocks();
+            addHeadingAnchors();
+            wrapTables();
 
             if (typeof renderMathInElement !== 'undefined') {
                 renderMathInElement(document.body, {
@@ -287,6 +232,64 @@
 
             initFootnoteTooltip();
         });
+
+        function enhanceCodeBlocks() {
+            var pres = document.querySelectorAll('.article-content pre');
+            pres.forEach(function(pre) {
+                var code = pre.querySelector('code');
+                if (!code) return;
+                var langMatch = (code.className || '').match(/language-(\S+)/);
+                var lang = langMatch ? langMatch[1] : '';
+                var wrapper = document.createElement('div');
+                wrapper.className = 'code-block-wrapper';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+                var header = document.createElement('div');
+                header.className = 'code-block-header';
+                header.innerHTML = '<span class="code-language">' + (lang || 'code') + '</span>' +
+                    '<button class="code-copy-btn" title="复制代码">' +
+                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+                    '<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>' +
+                    '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>' +
+                    '</svg><span>复制</span></button>';
+                wrapper.insertBefore(header, pre);
+                pre.classList.add('code-block-content');
+                var copyBtn = header.querySelector('.code-copy-btn');
+                copyBtn.addEventListener('click', function() {
+                    navigator.clipboard.writeText(code.textContent).then(function() {
+                        copyBtn.classList.add('copied');
+                        copyBtn.querySelector('span').textContent = '已复制';
+                        setTimeout(function() { copyBtn.classList.remove('copied'); copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+                    }).catch(function() {
+                        copyBtn.querySelector('span').textContent = '复制失败';
+                        setTimeout(function() { copyBtn.querySelector('span').textContent = '复制'; }, 2000);
+                    });
+                });
+            });
+        }
+
+        function addHeadingAnchors() {
+            var headings = document.querySelectorAll('.article-content h2, .article-content h3, .article-content h4');
+            headings.forEach(function(h, i) {
+                if (!h.id) h.id = 'heading-' + i;
+                var anchor = document.createElement('a');
+                anchor.className = 'heading-anchor';
+                anchor.href = '#' + h.id;
+                anchor.textContent = '§';
+                anchor.setAttribute('aria-label', 'Permalink to ' + (h.textContent || '').trim());
+                h.insertBefore(anchor, h.firstChild);
+            });
+        }
+
+        function wrapTables() {
+            var tables = document.querySelectorAll('.article-content table');
+            tables.forEach(function(table) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'table-wrapper';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
 
         function initFootnoteTooltip() {
             var refs = document.querySelectorAll('sup a[data-footnote-ref]');
@@ -328,12 +331,20 @@
 
             function positionTip(tip, anchor) {
                 var rect = anchor.getBoundingClientRect();
+                var tipH = tip.offsetHeight || 100;
                 var tipW = tip.offsetWidth || 280;
                 var left = rect.left + rect.width / 2 - tipW / 2;
                 if (left < 12) left = 12;
                 if (left + tipW > window.innerWidth - 12) left = window.innerWidth - tipW - 12;
+                var top;
+                if (rect.top > tipH + 12) {
+                    top = rect.top - tipH - 12;
+                } else {
+                    top = rect.bottom + 12;
+                }
                 tip.style.left = left + 'px';
-                tip.style.bottom = (window.innerHeight - rect.top + 12) + 'px';
+                tip.style.top = top + 'px';
+                tip.style.bottom = 'auto';
             }
         }
     </script>

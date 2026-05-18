@@ -54,11 +54,12 @@
     --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.5);
     
     /* 字体 */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
-    --font-serif: 'Georgia', 'Times New Roman', 'Noto Serif SC', 'Source Han Serif CN', serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Liberation Mono', monospace;
-    --font-serif-cn: 'Noto Serif SC', 'Source Han Serif CN', 'SimSun', 'STSong', serif;
-    --font-code: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Consolas', 'Liberation Mono', monospace;
+    /* 无衬线：系统原生字体栈 — 零延迟，全平台原生渲染 */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans SC", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    /* 衬线：Noto Serif SC 优先 — CJK 正文 + 等高拉丁数字，无 Georgia（旧风格数字） */
+    --font-serif: 'Noto Serif SC', 'Source Han Serif CN', 'Times New Roman', 'Noto Serif', serif;
+    /* 等宽：系统原生等宽栈 — 零延迟，macOS(SF Mono) / Windows(Consolas) 原生渲染 */
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     
     /* 动画 */
     --transition-fast: 0.15s ease;
@@ -267,8 +268,6 @@ body {
     background: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
-    max-width: 100vw;
-    overflow-x: hidden;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
