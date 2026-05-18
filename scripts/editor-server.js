@@ -14,7 +14,8 @@ const EDITOR_TOKEN = process.env.EDITOR_TOKEN || '';
 
 function resolveSafe(baseDir, userPath) {
     const resolved = path.resolve(baseDir, userPath);
-    if (!resolved.startsWith(path.resolve(baseDir) + path.sep)) {
+    const base = path.resolve(baseDir);
+    if (!resolved.startsWith(base + path.sep) && resolved !== base) {
         return null;
     }
     return resolved;
