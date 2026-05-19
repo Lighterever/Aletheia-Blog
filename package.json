@@ -10,7 +10,6 @@
   "dependencies": {
     "marked": "^9.1.6",
     "marked-alert": "^2.1.2",
-    "marked-emoji": "^2.0.3",
-    "marked-footnote": "^1.4.0"
+    "marked-emoji": "^2.0.3"
   }
 }
