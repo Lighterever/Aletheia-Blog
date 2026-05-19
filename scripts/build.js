@@ -5,6 +5,9 @@ const markedAlert = require('marked-alert');
 const { emojify } = require('../js/utils/emojify.js');
 const mdPreprocess = require('../js/utils/md-preprocessor.js');
 
+// Provide marked instance for footnote content rendering
+mdPreprocess.restoreFootnotes._marked = marked;
+
 const ARTICLES_DIR = path.join(__dirname, '..', 'articles');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'data.js');

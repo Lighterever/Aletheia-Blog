@@ -769,46 +769,6 @@ function insertFootnote() {
 function insertDetails() { wrapBlock('\n<details>\n<summary>点击展开</summary>\n\n', '\n\n</details>\n'); }
 function insertAlert(t) { wrapBlock('\n> [!' + t + ']\n> ', '\n'); }
 
-function cleanupFootnotes() {
-    var text = ta.value;
-    var m = text.match(/\n\n\[(\^\d+)\]: /);
-    if (!m) return;
-    var defStart = text.indexOf(m[0]);
-    var body = text.slice(0, defStart);
-    var defs = text.slice(defStart);
-
-    var active = {};
-    var r;
-    var re = /\[(\^(\d+))\]/g;
-    while ((r = re.exec(body)) !== null) active[r[1]] = true;
-
-    var lines = defs.split('\n');
-    var out = [];
-    var i = 0;
-    while (i < lines.length) {
-        if (lines[i].trim() === '') { out.push(''); i++; continue; }
-        var dm = lines[i].match(/^\[(\^\d+)\]:\s?(.*)/);
-        if (dm && active[dm[1]]) {
-            out.push(lines[i]);
-            i++;
-        } else if (dm && !active[dm[1]]) {
-            i++;
-            while (i < lines.length && lines[i].trim() !== '' && !/^\[\^\d+\]:/.test(lines[i])) i++;
-        } else {
-            out.push(lines[i]);
-            i++;
-        }
-    }
-
-    var cleaned = out.join('\n').replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n');
-    if (cleaned !== defs.replace(/^\n+/, '').replace(/\n{3,}/g, '\n\n')) {
-        var cursor = ta.selectionStart;
-        ta.value = body + '\n\n' + cleaned;
-        if (cursor > ta.value.length) cursor = ta.value.length;
-        ta.selectionStart = ta.selectionEnd = cursor;
-    }
-}
-
 // ── Smart list: selected lines get proper prefix ──
 function listPre(prefix) {
     var v = ta.value, s = ta.selectionStart, e = ta.selectionEnd;
@@ -868,7 +828,6 @@ ta.addEventListener('keydown', function(e) {
 
 // ── File ops ──
 function buildContent() {
-    cleanupFootnotes();
     var title = document.getElementById('metaTitle').value.trim();
     var date = document.getElementById('metaDate').value.trim();
     var tags = document.getElementById('metaTags').value.trim();
